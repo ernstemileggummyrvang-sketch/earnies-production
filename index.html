@@ -269,6 +269,21 @@ select.field { appearance: none; padding-right: 40px;
 .cover .blob { position: absolute; border-radius: 50%; filter: blur(26px); }
 .cover .mono-title { position: absolute; left: 18px; bottom: 12px; font-family: var(--f-display); font-weight: 600; font-size: 54px; line-height: 1; color: rgba(48,52,58,.82); letter-spacing: -.02em; }
 .cover .example { position: absolute; top: 12px; right: 12px; }
+.cover-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.art-row { display: flex; gap: 16px; align-items: center; }
+.art-tile { flex: none; width: 112px; height: 112px; border-radius: 22px; overflow: hidden; position: relative; display: grid; place-items: center; background: linear-gradient(150deg, var(--t1, var(--sky)), #FFFFFF 70%); box-shadow: inset 0 0 0 1px rgba(255,255,255,.9), 0 10px 24px -10px rgba(var(--shadow),.35); color: var(--ink-soft); cursor: pointer; padding: 0; border: 0; }
+.art-tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.art-tile svg { width: 30px; height: 30px; }
+.art-row .acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.song-art { flex: none; width: 40px; height: 40px; border-radius: 12px; overflow: hidden; padding: 0; border: 0; cursor: pointer; display: grid; place-items: center; background: rgba(255,255,255,.75); box-shadow: inset 0 0 0 1px var(--hairline); color: var(--ink-mute); }
+.song-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.song-art svg { width: 18px; height: 18px; }
+.song-art.sm { width: 36px; height: 36px; border-radius: 11px; }
+.song-art.sm svg { width: 16px; height: 16px; }
+.beat-title.has-thumb { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.beat-title.has-thumb .bt { display: grid; min-width: 0; }
+.player-art.has-art { background-size: cover !important; background-position: center !important; background-color: transparent !important; }
+.player-art.has-art .vinyl { display: none; }
 .project-body { padding: 16px 18px 18px; display: grid; gap: 10px; }
 .project-body h3 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -.01em; }
 .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--ink-soft); font-size: 13px; }
@@ -352,6 +367,9 @@ select.field { appearance: none; padding-right: 40px;
 .drop:hover, .drop.over { background: rgba(255,255,255,.75); border-color: rgba(110,190,178,.9); }
 .drop b { color: var(--ink); font-weight: 600; }
 .drop svg { width: 26px; height: 26px; color: var(--ink-soft); }
+.drop-sm { padding: 16px 14px; gap: 4px; font-size: 13px; }
+.drop-sm svg { width: 22px; height: 22px; }
+.drop.busy { pointer-events: none; opacity: .7; }
 .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
 .err { color: var(--danger); font-size: 13px; }
 .stepper { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
@@ -542,7 +560,7 @@ select.field { appearance: none; padding-right: 40px;
 <body>
 
 <div class="ambient" aria-hidden="true"><span class="spot a"></span><span class="spot b"></span><span class="spot c"></span></div>
-<section class="start" id="start" aria-label="Welcome to Earnies Production">
+<section class="start" id="start" hidden aria-label="Welcome to Earnies Production">
   <div class="sky" aria-hidden="true"><div class="sky-wash"><span class="w1"></span><span class="w2"></span><span class="w3"></span><span class="w4"></span></div></div>
   <canvas id="clouds" aria-hidden="true"></canvas>
   <div class="bloom" aria-hidden="true"></div>
@@ -620,6 +638,8 @@ select.field { appearance: none; padding-right: 40px;
 <div class="scrim" id="scrim" hidden><div class="modal glass dense" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"></div></div>
 <div class="toast glass dense" id="toast" role="status" hidden></div>
 <input type="file" id="file" accept="audio/*,.mp3,.wav,.aiff,.aif,.flac,.m4a,.ogg" class="sr" tabindex="-1">
+<input type="file" id="img-file" accept="image/*" class="sr" tabindex="-1">
+<input type="file" id="p-file" accept="audio/*,.mp3,.wav,.aiff,.aif,.flac,.m4a,.ogg" multiple class="sr" tabindex="-1">
 
 <script>
 (() => {
@@ -637,6 +657,7 @@ const I = {
   prev: '<path d="M6 5v14" /><path d="M19 5v14L8 12l11-7Z" fill="currentColor" stroke="none"/>',
   next: '<path d="M18 5v14" /><path d="M5 5v14l11-7L5 5Z" fill="currentColor" stroke="none"/>',
   x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  image: '<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="9" cy="9.5" r="1.8"/><path d="m20 15-4.5-4.5L6 20"/>',
   upload: '<path d="M12 15V4M7 9l5-5 5 5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
   trash: '<path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13"/>',
   send: '<path d="M4 12 20 4l-6 16-3-7-7-1Z"/>',
@@ -694,6 +715,39 @@ async function getBlob(id) {
   if (!idb) return null;
   try { return await new Promise((res) => { const r = idb.transaction("files").objectStore("files").get(id); r.onsuccess = () => res(r.result || null); r.onerror = () => res(null); }); } catch { return null; }
 }
+/* Cover art: images live in IndexedDB as "art-<id>", shown through object URLs. */
+const artUrls = new Map();
+const artOf = (id) => artUrls.get(id) || "";
+const songArt = (b) => artOf(b.id) || (b.project ? artOf(b.project) : "");
+async function loadArt() {
+  const ids = [...S.projects.filter((p) => p.art).map((p) => p.id), ...S.beats.filter((b) => b.art).map((b) => b.id)];
+  for (const id of ids) { const blob = await getBlob(`art-${id}`); if (blob) artUrls.set(id, URL.createObjectURL(blob)); }
+  if (ids.length) { renderMain(); renderPlayer(); }
+}
+function shrinkImage(file, max = 900) {
+  return new Promise((res) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement("canvas");
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      c.toBlob((b) => res(b || file), "image/jpeg", .88);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); res(null); };
+    img.src = url;
+  });
+}
+async function setArt(item, file) {
+  const blob = await shrinkImage(file);
+  if (!blob) { toast("That image couldn't be opened. Try a JPG or PNG."); return; }
+  await putBlob(`art-${item.id}`, blob);
+  if (artUrls.has(item.id)) URL.revokeObjectURL(artUrls.get(item.id));
+  artUrls.set(item.id, URL.createObjectURL(blob)); item.art = true;
+}
+function dropArt(item) {
+  if (artUrls.has(item.id)) URL.revokeObjectURL(artUrls.get(item.id));
+  artUrls.delete(item.id); delBlob(`art-${item.id}`); item.art = false;
+}
 async function delBlob(id) {
   memBlobs.delete(id);
   if (!idb) return;
@@ -719,6 +773,8 @@ const uid = (p) => `${p}-${Date.now().toString(36)}${Math.random().toString(36).
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmt = (s) => { if (!isFinite(s) || s < 0) s = 0; const m = Math.floor(s / 60); return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`; };
 const beatById = (id) => S.beats.find((b) => b.id === id);
+/* Songs uploaded straight into a project carry `project` and stay out of the Beats library. */
+const libBeats = () => S.beats.filter((b) => !b.project);
 const tintOf = (i) => TINTS[(i ?? 0) % 3];
 const beatTint = (b) => tintOf(GENRES.indexOf(b.genre) >= 0 ? GENRES.indexOf(b.genre) : (b.title.length));
 const initials = (name) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
@@ -841,7 +897,8 @@ function seek(ratio) {
   tick(true);
 }
 function step(dir) {
-  const list = visibleBeats().length ? visibleBeats() : S.beats;
+  const cur = beatById(S.nowId), proj = cur?.project && S.projects.find((p) => p.id === cur.project);
+  const list = proj ? proj.beats.map(beatById).filter(Boolean) : visibleBeats().length ? visibleBeats() : libBeats();
   if (!list.length) return;
   const i = list.findIndex((b) => b.id === S.nowId);
   const next = list[(i + dir + list.length) % list.length];
@@ -864,7 +921,7 @@ function renderTabs() {
 
 function visibleBeats() {
   const q = S.query.trim().toLowerCase();
-  return S.beats.filter((b) => (S.genre === "All" || b.genre === S.genre) &&
+  return libBeats().filter((b) => (S.genre === "All" || b.genre === S.genre) &&
     (!q || [b.title, b.genre, b.key, String(b.bpm)].some((v) => String(v).toLowerCase().includes(q))));
 }
 
@@ -876,7 +933,7 @@ function beatRow(b) {
   const wave = peaks.map((p, i) => `<i class="${now && i / peaks.length <= pos ? "on" : ""}" style="height:${Math.round(p * 100)}%"></i>`).join("");
   return `<li class="beat glass${now ? " lit" : ""}" data-beat="${b.id}" style="--t1:${tint};--beat-ink:${ink}">
     <button class="btn icon primary play" data-act="play" data-id="${b.id}" aria-label="${on ? "Pause" : "Play"} ${esc(b.title)}" style="--t1:${tint}">${ic(on ? "pause" : "play")}</button>
-    <div class="beat-title"><b>${esc(b.title)}</b><small>${esc(b.genre)}${b.example ? ' <span class="example">Example</span>' : ""}</small></div>
+    <div class="beat-title has-thumb"><button type="button" class="song-art sm" data-act="art" data-kind="song" data-id="${b.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} cover art for ${esc(b.title)}">${artOf(b.id) ? `<img src="${artOf(b.id)}" alt="">` : ic("image")}</button><span class="bt"><b>${esc(b.title)}</b><small>${esc(b.genre)}${b.example ? ' <span class="example">Example</span>' : ""}</small></span></div>
     <div class="wave" aria-hidden="true">${wave}</div>
     <div class="cell mono"><b>${b.bpm || "––"}</b> BPM</div>
     <div class="cell c-key">${b.key ? `<b>${esc(b.key)}</b> <span class="mono">${camelot(b.key)}</span>` : "No key"}</div>
@@ -887,11 +944,11 @@ function beatRow(b) {
 
 function viewBeats() {
   const list = visibleBeats();
-  const total = S.beats.reduce((a, b) => a + (b.len || 0), 0);
+  const total = libBeats().reduce((a, b) => a + (b.len || 0), 0);
   const chips = ["All", ...GENRES].map((g) => `<button class="btn sm${S.genre === g ? " lit" : " quiet"}" data-act="genre" data-genre="${esc(g)}" aria-pressed="${S.genre === g}">${esc(g)}</button>`).join("");
   return `<section class="view">
     <div class="head">
-      <div><div class="kicker">Library</div><h1>Beats</h1><p>${S.beats.length} ${S.beats.length === 1 ? "beat" : "beats"} · ${fmt(total)} of music</p></div>
+      <div><div class="kicker">Library</div><h1>Beats</h1><p>${libBeats().length} ${libBeats().length === 1 ? "beat" : "beats"} · ${fmt(total)} of music</p></div>
       <div class="head-actions"><button class="btn primary" data-act="add-beat">${ic("plus")}Add Beat</button></div>
     </div>
     <div class="toolbar">
@@ -899,7 +956,7 @@ function viewBeats() {
       <div class="chips" role="group" aria-label="Filter by genre">${chips}</div>
     </div>
     ${list.length ? `<ul class="beats" style="list-style:none;margin:0;padding:0">${list.map(beatRow).join("")}</ul>` :
-      `<div class="empty glass"><h3>${S.beats.length ? "No beats match" : "Your library is empty"}</h3><p>${S.beats.length ? "Try another search or genre." : "Add your first beat or song with a title, BPM and key."}</p><button class="btn primary" data-act="add-beat">${ic("plus")}Add Beat</button></div>`}
+      `<div class="empty glass"><h3>${libBeats().length ? "No beats match" : "Your library is empty"}</h3><p>${libBeats().length ? "Try another search or genre." : "Add your first beat or song with a title, BPM and key."}</p><button class="btn primary" data-act="add-beat">${ic("plus")}Add Beat</button></div>`}
   </section>`;
 }
 
@@ -912,6 +969,7 @@ function projectCard(p) {
       <span class="blob" style="width:170px;height:170px;left:-30px;top:-50px;background:${tint};opacity:.85"></span>
       <span class="blob" style="width:150px;height:150px;right:-30px;bottom:-60px;background:${t2};opacity:.7"></span>
       <span class="mono-title">${esc(initials(p.title))}</span>
+      ${artOf(p.id) ? `<img class="cover-art" src="${artOf(p.id)}" alt="">` : ""}
       ${p.example ? '<span class="example">Example</span>' : ""}
     </div>
     <div class="project-body">
@@ -953,7 +1011,7 @@ function collabDetail(c, cls = "") {
   const [tint, ink] = tintOf(c.tint), st = STATUS[c.status] || STATUS.active;
   const splitColors = ["var(--peach)", "var(--water)", "var(--sky)", "#D8CFC2"];
   const shared = c.beats.map(beatById).filter(Boolean);
-  const options = S.beats.filter((b) => !c.beats.includes(b.id)).map((b) => `<option value="${b.id}">${esc(b.title)} · ${b.bpm} BPM</option>`).join("");
+  const options = libBeats().filter((b) => !c.beats.includes(b.id)).map((b) => `<option value="${b.id}">${esc(b.title)} · ${b.bpm} BPM</option>`).join("");
   return `<div class="detail glass ${cls}">
     <div class="detail-head">
       <span class="avatar lg" style="--av:${tint}">${esc(initials(c.name))}</span>
@@ -1018,6 +1076,7 @@ function renderPlayer() {
   const [tint, ink] = beatTint(b);
   el.style.setProperty("--now-tint", tint); el.style.setProperty("--now-ink", ink); el.style.setProperty("--t1", tint);
   $("#pl-art").classList.toggle("spinning", S.playing);
+  const art = songArt(b); $("#pl-art").classList.toggle("has-art", !!art); $("#pl-art").style.setProperty("background-image", art ? `url("${art}")` : "", art ? "important" : "");
   $("#pl-title").textContent = b.title;
   $("#pl-meta").textContent = `${b.bpm || "––"} BPM · ${b.key || "No key"}${b.key ? " " + camelot(b.key) : ""}`;
   const t = $("#pl-toggle"); t.innerHTML = ic(S.playing ? "pause" : "play"); t.setAttribute("aria-label", S.playing ? "Pause" : "Play");
@@ -1060,12 +1119,14 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !scrim.h
 const modalHead = (kicker, title) => `<div class="modal-head"><div><div class="kicker">${kicker}</div><h2 id="modal-title">${title}</h2></div><button class="btn icon sm" data-act="close" aria-label="Close">${ic("x")}</button></div>`;
 
 let pendingFile = null;
+let pendingArt = null;
 function beatForm() {
-  pendingFile = null;
+  pendingFile = null; pendingArt = null;
   const keyOpts = KEYS.map(([k, c]) => `<option value="${k}">${k} · ${c}</option>`).join("");
   openModal(`${modalHead("New beat", "Add a beat")}
     <form class="form" data-form="beat" novalidate>
       <button type="button" class="drop" id="drop" data-act="pick-file">${ic("upload")}<b id="drop-label">Choose an audio file</b><span id="drop-sub">or drop it here · MP3, WAV, AIFF, FLAC</span></button>
+      <div class="art-row"><button type="button" class="song-art" id="f-art" data-act="pick-art" aria-label="Add cover art" style="width:56px;height:56px;border-radius:16px">${ic("image")}</button><div><b style="font-size:14px">Cover art</b><div style="font-size:12.5px;color:var(--ink-soft)">Optional. Tap the square to pick an image.</div></div></div>
       <label>Title<input class="field" id="f-title" placeholder="Sunlit Terrace" autocomplete="off" required></label>
       <div class="row2">
         <label>BPM<input class="field mono" id="f-bpm" type="number" inputmode="numeric" min="40" max="300" placeholder="92"></label>
@@ -1120,18 +1181,27 @@ function projectDetail(id) {
   const p = S.projects.find((x) => x.id === id); if (!p) return;
   const [tint, ink] = tintOf(p.tint);
   const tracks = p.beats.map(beatById).filter(Boolean);
-  const options = S.beats.filter((b) => !p.beats.includes(b.id)).map((b) => `<option value="${b.id}">${esc(b.title)} · ${b.bpm} BPM</option>`).join("");
+  const options = libBeats().filter((b) => !p.beats.includes(b.id)).map((b) => `<option value="${b.id}">${esc(b.title)} · ${b.bpm} BPM</option>`).join("");
   openModal(`${modalHead(`${esc(p.artist || "Earnie")} · due ${dateLabel(p.due)}${p.example ? ' · <span class="example">Example</span>' : ""}`, esc(p.title))}
     <div class="form" style="--t1:${tint}">
+      <div class="art-row">
+        <button type="button" class="art-tile" data-act="art" data-kind="project" data-id="${p.id}" aria-label="${artOf(p.id) ? "Change" : "Add"} album art">${artOf(p.id) ? `<img src="${artOf(p.id)}" alt="">` : ic("image")}</button>
+        <div style="display:grid;gap:8px"><div class="kicker">Album art</div>
+          <p style="margin:0;color:var(--ink-soft);font-size:13.5px">${artOf(p.id) ? "Shown on the project card and for songs without their own art." : "Add a cover for the album or single. Songs use it unless they have their own."}</p>
+          <div class="acts"><button type="button" class="btn sm" data-act="art" data-kind="project" data-id="${p.id}">${ic("image")}${artOf(p.id) ? "Change art" : "Add album art"}</button>${artOf(p.id) ? `<button type="button" class="btn sm quiet" data-act="art-remove" data-kind="project" data-id="${p.id}">Remove</button>` : ""}</div></div>
+      </div>
       <div><div class="kicker" style="margin-bottom:8px">Stage</div>
         <div class="stepper" role="group" aria-label="Project stage">${STAGES.map((s, i) => `<button class="step${i === p.stage ? " lit" : i < p.stage ? " done" : ""}" data-act="stage" data-id="${p.id}" data-stage="${i}" aria-pressed="${i === p.stage}">${s}</button>`).join("")}</div></div>
       <div><div class="kicker" style="margin-bottom:8px">Tracklist</div>
         <div class="mini-list">
           ${tracks.length ? tracks.map((b, i) => { const on = S.nowId === b.id && S.playing; return `<div class="mini">
+            <button type="button" class="song-art" data-act="art" data-kind="song" data-id="${b.id}" data-project="${p.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} art for ${esc(b.title)}">${songArt(b) ? `<img src="${songArt(b)}" alt="">` : ic("image")}</button>
             <button class="btn icon primary" data-act="play" data-id="${b.id}" aria-label="${on ? "Pause" : "Play"} ${esc(b.title)}" style="--t1:${beatTint(b)[0]}">${ic(on ? "pause" : "play")}</button>
-            <div class="grow"><b><span class="mono" style="color:var(--ink-mute)">${String(i + 1).padStart(2, "0")}</span>&nbsp; ${esc(b.title)}</b><small class="mono">${b.bpm} BPM · ${esc(b.key)} ${camelot(b.key)} · ${fmt(b.len)}</small></div>
+            <div class="grow"><b><span class="mono" style="color:var(--ink-mute)">${String(i + 1).padStart(2, "0")}</span>&nbsp; ${esc(b.title)}</b><small class="mono">${[b.project ? "Uploaded" : null, b.bpm ? `${b.bpm} BPM` : null, b.key ? `${esc(b.key)} ${camelot(b.key)}` : null, fmt(b.len)].filter(Boolean).join(" · ")}</small></div>
             <button class="btn icon sm quiet" data-act="untrack" data-id="${b.id}" data-project="${p.id}" aria-label="Remove ${esc(b.title)} from project">${ic("x")}</button></div>`; }).join("") :
-            `<p style="margin:0;color:var(--ink-soft);font-size:14px">No tracks yet. Add beats from your library.</p>`}
+            `<p style="margin:0;color:var(--ink-soft);font-size:14px">No tracks yet. Upload songs straight from your device, or add beats from your library.</p>`}
+          ${tracks.length ? `<p style="margin:0;color:var(--ink-mute);font-size:12.5px">Tap a song's picture square to give it its own single art.</p>` : ""}
+          <button type="button" class="drop drop-sm" id="p-drop" data-act="upload-tracks" data-project="${p.id}">${ic("upload")}<b>Upload songs to this project</b><span>Choose one or more files, or drop them here · MP3, WAV, AIFF, FLAC</span></button>
           ${options ? `<div class="compose"><label class="sr" for="add-track">Add a beat</label><select class="field" id="add-track">${options}</select><button class="btn" data-act="track" data-project="${p.id}">${ic("plus")}Add</button></div>` : ""}
         </div></div>
       ${p.notes ? `<div><div class="kicker" style="margin-bottom:8px">Notes</div><p style="margin:0;max-width:60ch">${esc(p.notes)}</p></div>` : ""}
@@ -1190,6 +1260,7 @@ document.addEventListener("click", async (e) => {
         S.projects.forEach((p) => (p.beats = p.beats.filter((x) => x !== id)));
         S.collabs.forEach((c) => (c.beats = c.beats.filter((x) => x !== id)));
         if (b?.source === "file") delBlob(id);
+        if (b?.art) dropArt(b);
         persist(); renderAll(); toast(`Deleted ${b?.title ?? "beat"}`);
       });
       break; }
@@ -1197,8 +1268,14 @@ document.addEventListener("click", async (e) => {
     case "open-project": projectDetail(id); break;
     case "stage": { const p = S.projects.find((x) => x.id === id); p.stage = +el.dataset.stage; persist(); renderMain(); projectDetail(id); break; }
     case "track": { const p = S.projects.find((x) => x.id === el.dataset.project); const v = $("#add-track").value; if (v) { p.beats.push(v); persist(); renderMain(); projectDetail(p.id); } break; }
-    case "untrack": { const p = S.projects.find((x) => x.id === el.dataset.project); p.beats = p.beats.filter((x) => x !== id); persist(); renderMain(); projectDetail(p.id); break; }
-    case "del-project": confirmTap(el, id, "Tap again to delete", () => { const p = S.projects.find((x) => x.id === id); S.projects = S.projects.filter((x) => x.id !== id); persist(); closeModal(); renderMain(); toast(`Deleted ${p?.title}`); }); break;
+    case "untrack": { const p = S.projects.find((x) => x.id === el.dataset.project), b = beatById(id);
+      if (b?.project) { confirmTap(el, id, "Tap again to delete", () => { removeProjectSong(b); persist(); renderMain(); projectDetail(p.id); toast(`Deleted ${b.title}`); }); break; }
+      p.beats = p.beats.filter((x) => x !== id); persist(); renderMain(); projectDetail(p.id); break; }
+    case "pick-art": artTarget = { kind: "pending" }; $("#img-file").click(); break;
+    case "art": artTarget = { kind: el.dataset.kind, id, project: el.dataset.project }; $("#img-file").click(); break;
+    case "art-remove": { const p = S.projects.find((x) => x.id === id); if (p) { dropArt(p); persist(); renderMain(); renderPlayer(); projectDetail(p.id); toast("Removed album art"); } break; }
+    case "upload-tracks": uploadTarget = el.dataset.project; $("#p-file").click(); break;
+    case "del-project": confirmTap(el, id, "Tap again to delete", () => { const p = S.projects.find((x) => x.id === id); S.beats.filter((b) => b.project === id).forEach(removeProjectSong); if (p?.art) dropArt(p); S.projects = S.projects.filter((x) => x.id !== id); persist(); closeModal(); renderMain(); toast(`Deleted ${p?.title}`); }); break;
     case "add-collab": collabForm(); break;
     case "open-collab":
       S.collab = id;
@@ -1225,6 +1302,44 @@ document.addEventListener("input", (e) => { if (e.target.id === "q") { S.query =
 
 $("#file").addEventListener("change", (e) => { const f = e.target.files?.[0]; if (f) takeFile(f); e.target.value = ""; });
 
+/* Upload songs straight into a project, skipping the Beats library. */
+let uploadTarget = null;
+const isAudio = (f) => /^audio\//.test(f.type) || /\.(mp3|wav|aiff?|flac|m4a|ogg)$/i.test(f.name);
+function removeProjectSong(b) {
+  if (S.nowId === b.id) { pause(true); P.src = null; S.nowId = null; renderPlayer(); }
+  S.beats = S.beats.filter((x) => x.id !== b.id);
+  S.projects.forEach((p) => (p.beats = p.beats.filter((x) => x !== b.id)));
+  delBlob(b.id); if (b.art) dropArt(b);
+}
+async function addProjectFiles(pid, files) {
+  const p = S.projects.find((x) => x.id === pid); if (!p) return;
+  const audio = [...files].filter(isAudio);
+  if (!audio.length) { toast("Those files aren't audio. Pick MP3, WAV, AIFF or FLAC."); return; }
+  const drop = $("#p-drop"); if (drop) { drop.classList.add("busy"); drop.querySelector("b").textContent = `Adding ${audio.length} ${audio.length === 1 ? "song" : "songs"}…`; }
+  for (const f of audio) {
+    const id = uid("b"), info = await analyse(f);
+    await putBlob(id, f);
+    S.beats.push({ id, title: f.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim() || "Untitled", bpm: null, key: null, genre: null, len: info.len, peaks: info.peaks, source: "file", project: pid, added: Date.now() });
+    p.beats.push(id);
+  }
+  persist(); renderMain();
+  if (!scrim.hidden && $("#p-drop")?.dataset.project === pid) projectDetail(pid);
+  toast(audio.length === 1 ? `Added a song to ${p.title}` : `Added ${audio.length} songs to ${p.title}`);
+}
+let artTarget = null;
+$("#img-file").addEventListener("change", async (e) => {
+  const f = e.target.files?.[0]; e.target.value = ""; if (!f || !artTarget) return;
+  if (artTarget.kind === "pending") { pendingArt = f; const u = URL.createObjectURL(f), el = $("#f-art"); if (el) el.innerHTML = `<img src="${u}" alt="">`; return; }
+  const t = artTarget, item = t.kind === "project" ? S.projects.find((x) => x.id === t.id) : beatById(t.id); if (!item) return;
+  await setArt(item, f); persist(); renderMain(); renderPlayer();
+  const pid = t.kind === "project" ? t.id : t.project; if (!scrim.hidden && pid) projectDetail(pid);
+  toast(t.kind === "project" ? "Album art added" : `Art added to ${item.title}`);
+});
+$("#p-file").addEventListener("change", (e) => { const fs = e.target.files; if (fs?.length && uploadTarget) addProjectFiles(uploadTarget, fs); e.target.value = ""; });
+["dragenter", "dragover"].forEach((ev) => document.addEventListener(ev, (e) => { const d = e.target.closest?.("#p-drop"); if (d) { e.preventDefault(); d.classList.add("over"); } }));
+["dragleave", "drop"].forEach((ev) => document.addEventListener(ev, (e) => { const d = e.target.closest?.("#p-drop"); if (d) { e.preventDefault(); d.classList.remove("over"); } }));
+document.addEventListener("drop", (e) => { const d = e.target.closest?.("#p-drop"); if (d && e.dataTransfer?.files?.length) addProjectFiles(d.dataset.project, e.dataTransfer.files); });
+
 document.addEventListener("submit", async (e) => {
   const form = e.target.closest("[data-form]"); if (!form) return;
   e.preventDefault();
@@ -1238,6 +1353,7 @@ document.addEventListener("submit", async (e) => {
     await putBlob(id, pendingFile);
     const bpm = parseInt($("#f-bpm").value, 10);
     S.beats.unshift({ id, title, bpm: bpm > 0 ? bpm : null, key: $("#f-key").value || null, genre: $("#f-genre").value, len: info.len, peaks: info.peaks, source: "file", added: Date.now() });
+    if (pendingArt) await setArt(S.beats[0], pendingArt);
     persist(); closeModal(); S.genre = "All"; S.query = ""; renderAll(); toast(`Added ${title}`);
   }
   if (kind === "project") {
@@ -1416,7 +1532,7 @@ const h = location.hash.slice(1); if (SECTIONS[h]) S.tab = h;
 if (!S.collab && S.collabs[0] && !matchMedia("(max-width:860px)").matches) S.collab = S.collabs[0].id;
 renderAll();
 if (!SECTIONS[h]) showStart();
-openIdb().then((db) => { idb = db; });
+openIdb().then((db) => { idb = db; loadArt(); });
 })();
 </script>
 
