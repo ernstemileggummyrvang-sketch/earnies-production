@@ -193,9 +193,10 @@ select.field { appearance: none; padding-right: 40px;
 .install-btn[hidden] { display: none !important; }
 .install-btn { white-space: nowrap; flex: none; }
 .brand b { white-space: nowrap; }
-@media (max-width: 520px) { .hide-sm { display: none; } }
+.show-sm { display: none; }
+@media (max-width: 520px) { .hide-sm { display: none; } .show-sm { display: inline; } }
 .scrim { z-index: 80 !important; }
-.toast { z-index: 90 !important; }
+.toast { z-index: 90 !important; pointer-events: none; }
 .steps { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 12px; counter-reset: step; }
 .steps li { counter-increment: step; display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start; font-size: 15px; line-height: 1.45; }
 .steps li::before { content: counter(step); width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 600 14px/1 var(--f-display); background: linear-gradient(180deg, #FFFFFF, #E4F2FB); box-shadow: inset 0 0 0 1px rgba(120,170,205,.35), 0 4px 10px rgba(60,120,170,.12); color: #2F6F9C; }
@@ -255,6 +256,37 @@ select.field { appearance: none; padding-right: 40px;
 .cover .blob { position: absolute; border-radius: 50%; filter: blur(26px); }
 .cover .mono-title { position: absolute; left: 18px; bottom: 12px; font-family: var(--f-display); font-weight: 600; font-size: 54px; line-height: 1; color: rgba(48,52,58,.82); letter-spacing: -.02em; }
 .cover .example { position: absolute; top: 12px; right: 12px; }
+.folders { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.folder { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 22px; text-align: left; min-width: 0; transition: transform .2s; }
+.folder:hover { transform: translateY(-2px); }
+.folder .fi { flex: none; width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; background: linear-gradient(150deg, var(--t1), #FFFFFF 85%); box-shadow: inset 0 0 0 1px rgba(255,255,255,.9); color: var(--ink); }
+.folder .fi svg { width: 21px; height: 21px; }
+.folder .ft { display: grid; min-width: 0; }
+.folder .ft b { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.folder .ft small { color: var(--ink-soft); font-size: 12.5px; }
+.crumb { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; padding: 10px 12px; border-radius: 24px; margin-bottom: 18px; }
+.crumb-name { display: inline-flex; align-items: center; gap: 8px; font-size: 17px; font-family: var(--f-display); }
+.crumb-name svg { width: 20px; height: 20px; color: var(--ink-soft); }
+.crumb-name b { font-weight: 600; }
+.crumb-acts { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+h2.sub { margin: 4px 0 12px; }
+.songs { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
+.song { display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 10px; border-radius: 24px; }
+.song .btn.icon.primary { width: 42px; min-height: 42px; flex: none; }
+.song-text { flex: 1; min-width: 0; display: grid; text-align: left; padding: 0; background: none; border: 0; cursor: pointer; color: inherit; font: inherit; }
+.song-text b { font-weight: 600; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.song-text small { color: var(--ink-soft); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.song-len { color: var(--ink-soft); font-size: 13px; }
+.empty.slim { padding: 34px 20px; margin-bottom: 30px; }
+.credits { display: grid; gap: 8px; }
+.credit { display: grid; grid-template-columns: minmax(0, 1fr) 112px 36px; gap: 8px; align-items: center; }
+.pct-wrap { position: relative; display: block; }
+.pct-wrap input { padding-right: 30px; width: 100%; }
+.pct-wrap span { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--ink-soft); font-size: 14px; pointer-events: none; }
+.credit-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.credit-total { margin-left: auto; font-size: 13px; color: var(--water-ink); font-weight: 600; }
+.credit-total.bad { color: #B4583C; }
+@media (max-width: 720px) { .song-len { display: none; } .crumb-acts { margin-left: 0; } .credit { grid-template-columns: minmax(0, 1fr) 104px 36px; } .pct-wrap input { padding-right: 24px; padding-left: 12px; } .pct-wrap span { right: 11px; } }
 .cover-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .art-row { display: flex; gap: 16px; align-items: center; }
 .art-tile { flex: none; width: 112px; height: 112px; border-radius: 22px; overflow: hidden; position: relative; display: grid; place-items: center; background: linear-gradient(150deg, var(--t1, var(--sky)), #FFFFFF 70%); box-shadow: inset 0 0 0 1px rgba(255,255,255,.9), 0 10px 24px -10px rgba(var(--shadow),.35); color: var(--ink-soft); cursor: pointer; padding: 0; border: 0; }
@@ -647,6 +679,10 @@ const I = {
   send: '<path d="M4 12 20 4l-6 16-3-7-7-1Z"/>',
   link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
   back: '<path d="M15 5 8 12l7 7"/>',
+  folder: '<path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/>',
+  folderPlus: '<path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/><path d="M12 11v5M9.5 13.5h5"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/>',
+  more: '<circle cx="5.5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="18.5" cy="12" r="1.3" fill="currentColor"/>',
 };
 const ic = (n) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
 
@@ -746,19 +782,30 @@ const S = {
   beats: (saved?.beats ?? []).filter((x) => !x.example),
   projects: (saved?.projects ?? []).filter((x) => !x.example),
   collabs: (saved?.collabs ?? []).filter((x) => !x.example),
+  folders: saved?.folders ?? [],
+  open: { beats: null, projects: null, collaborations: null },   // open folder per section
   query: "",
   genre: "All",
   collab: null,          // selected collaborator id
   nowId: null,
   playing: false,
 };
-const persist = () => store.save({ beats: S.beats, projects: S.projects, collabs: S.collabs });
+const persist = () => store.save({ beats: S.beats, projects: S.projects, collabs: S.collabs, folders: S.folders });
 const uid = (p) => `${p}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmt = (s) => { if (!isFinite(s) || s < 0) s = 0; const m = Math.floor(s / 60); return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`; };
 const beatById = (id) => S.beats.find((b) => b.id === id);
 /* Songs uploaded straight into a project carry `project` and stay out of the Beats library. */
-const libBeats = () => S.beats.filter((b) => !b.project);
+const libBeats = () => S.beats.filter((b) => !b.project && b.area !== "collab");
+/* Songs made with other people: uploaded in Collaborations with a split per person. */
+const collabSongs = () => S.beats.filter((b) => b.area === "collab");
+const ME = "Earnie";
+const pctFmt = (n) => String(Math.round(n * 100) / 100);
+const creditLine = (b) => (b.credits || []).map(([who, p]) => `${who} ${pctFmt(p)}%`).join(" · ");
+/* Folders: one level per section; items carry `folder`, null means the top level. */
+const foldersIn = (sec) => S.folders.filter((f) => f.section === sec);
+const folderById = (id) => S.folders.find((f) => f.id === id);
+const here = (sec, item) => (item.folder || null) === (S.open[sec] || null);
 const tintOf = (i) => TINTS[(i ?? 0) % 3];
 const beatTint = (b) => tintOf(GENRES.indexOf(b.genre) >= 0 ? GENRES.indexOf(b.genre) : (b.title.length));
 const initials = (name) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
@@ -882,7 +929,7 @@ function seek(ratio) {
 }
 function step(dir) {
   const cur = beatById(S.nowId), proj = cur?.project && S.projects.find((p) => p.id === cur.project);
-  const list = proj ? proj.beats.map(beatById).filter(Boolean) : visibleBeats().length ? visibleBeats() : libBeats();
+  const list = proj ? proj.beats.map(beatById).filter(Boolean) : cur?.area === "collab" ? collabSongs() : visibleBeats().length ? visibleBeats() : libBeats();
   if (!list.length) return;
   const i = list.findIndex((b) => b.id === S.nowId);
   const next = list[(i + dir + list.length) % list.length];
@@ -905,7 +952,7 @@ function renderTabs() {
 
 function visibleBeats() {
   const q = S.query.trim().toLowerCase();
-  return libBeats().filter((b) => (S.genre === "All" || b.genre === S.genre) &&
+  return libBeats().filter((b) => (q || here("beats", b)) && (S.genre === "All" || b.genre === S.genre) &&
     (!q || [b.title, b.genre, b.key, String(b.bpm)].some((v) => String(v).toLowerCase().includes(q))));
 }
 
@@ -922,7 +969,7 @@ function beatRow(b) {
     <div class="cell mono"><b>${b.bpm || "––"}</b> BPM</div>
     <div class="cell c-key">${b.key ? `<b>${esc(b.key)}</b> <span class="mono">${camelot(b.key)}</span>` : "No key"}</div>
     <div class="cell mono c-len">${fmt(b.len)}</div>
-    <button class="btn icon sm quiet more" data-act="del-beat" data-id="${b.id}" aria-label="Delete ${esc(b.title)}">${ic("trash")}</button>
+    <button class="btn icon sm quiet more" data-act="beat-menu" data-id="${b.id}" aria-label="More for ${esc(b.title)}">${ic("more")}</button>
   </li>`;
 }
 
@@ -933,14 +980,15 @@ function viewBeats() {
   return `<section class="view">
     <div class="head">
       <div><div class="kicker">Library</div><h1>Beats</h1><p>${libBeats().length} ${libBeats().length === 1 ? "beat" : "beats"} · ${fmt(total)} of music</p></div>
-      <div class="head-actions"><button class="btn primary" data-act="add-beat">${ic("plus")}Add Beat</button></div>
+      <div class="head-actions">${folderBtn("beats")}<button class="btn primary" data-act="add-beat">${ic("upload")}Upload</button></div>
     </div>
+    ${folderBar("beats")}
     <div class="toolbar">
       <label class="search"><span class="sr">Search beats</span>${ic("search")}<input class="field" id="q" type="search" placeholder="Search title, key or BPM" value="${esc(S.query)}" autocomplete="off"></label>
       <div class="chips" role="group" aria-label="Filter by genre">${chips}</div>
     </div>
     ${list.length ? `<ul class="beats" style="list-style:none;margin:0;padding:0">${list.map(beatRow).join("")}</ul>` :
-      `<div class="empty glass"><h3>${libBeats().length ? "No beats match" : "Your library is empty"}</h3><p>${libBeats().length ? "Try another search or genre." : "Add your first beat or song with a title, BPM and key."}</p><button class="btn primary" data-act="add-beat">${ic("plus")}Add Beat</button></div>`}
+      `<div class="empty glass"><h3>${S.open.beats ? "This folder is empty" : libBeats().length ? "No beats here" : "Your library is empty"}</h3><p>${S.open.beats ? "Upload beats straight into this folder." : libBeats().length ? "Try another search or genre, or open a folder." : "Upload your first beat or song with a title, BPM and key."}</p><button class="btn primary" data-act="add-beat">${ic("upload")}Upload</button></div>`}
   </section>`;
 }
 
@@ -972,10 +1020,11 @@ function viewProjects() {
   return `<section class="view">
     <div class="head">
       <div><div class="kicker">Workspace</div><h1>Earnies <em>Projects</em></h1><p>${S.projects.length} ${S.projects.length === 1 ? "project" : "projects"} · ${live} in progress</p></div>
-      <div class="head-actions"><button class="btn primary" data-act="add-project" style="--t1:var(--sky);--t2:var(--peach)">${ic("plus")}New Project</button></div>
+      <div class="head-actions">${folderBtn("projects")}<button class="btn" data-act="add-project">${ic("plus")}New Project</button><button class="btn primary" data-act="upload-section" style="--t1:var(--sky);--t2:var(--peach)">${ic("upload")}Upload</button></div>
     </div>
+    ${folderBar("projects")}
     <div class="grid">
-      ${S.projects.map(projectCard).join("")}
+      ${S.projects.filter((p) => here("projects", p)).map(projectCard).join("")}
       <button class="add-card" data-act="add-project">${ic("plus")}<span>Start a project</span></button>
     </div>
   </section>`;
@@ -1008,6 +1057,13 @@ function collabDetail(c, cls = "") {
       <div class="split">${c.split.map(([, pct], i) => `<span style="width:${pct}%;background:${splitColors[i % 4]}"></span>`).join("")}</div>
       <div class="split-legend">${c.split.map(([who, pct], i) => `<span><i style="background:${splitColors[i % 4]}"></i>${esc(who)} <b class="mono" style="color:var(--ink)">${pct}%</b></span>`).join("")}</div>
     </div>
+    ${(() => { const mine = collabSongs().filter((b) => (b.credits || []).some(([w]) => w.toLowerCase() === c.name.toLowerCase())); return mine.length ? `<div class="block">
+      <h4 class="kicker">Songs together</h4>
+      <div class="mini-list">${mine.map((b) => { const on = S.nowId === b.id && S.playing, share = b.credits.find(([w]) => w.toLowerCase() === c.name.toLowerCase())[1]; return `<div class="mini">
+        <button class="btn icon primary" data-act="play" data-id="${b.id}" aria-label="${on ? "Pause" : "Play"} ${esc(b.title)}" style="--t1:${beatTint(b)[0]}">${ic(on ? "pause" : "play")}</button>
+        <div class="grow"><b>${esc(b.title)}</b><small class="mono">${esc(c.name.split(" ")[0])} ${pctFmt(share)}% · ${esc(creditLine(b))}</small></div>
+        <button class="btn icon sm quiet" data-act="open-song" data-id="${b.id}" aria-label="Edit splits for ${esc(b.title)}">${ic("edit")}</button></div>`; }).join("")}</div>
+    </div>` : ""; })()}
     <div class="block">
       <h4 class="kicker">Shared beats</h4>
       <div class="mini-list">
@@ -1030,18 +1086,35 @@ function collabDetail(c, cls = "") {
   </div>`;
 }
 
+function songRow(b) {
+  const on = S.nowId === b.id && S.playing, [tint] = beatTint(b);
+  return `<div class="song glass${S.nowId === b.id ? " lit" : ""}" style="--t1:${tint}">
+    <button type="button" class="song-art" data-act="art" data-kind="song" data-id="${b.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} cover art for ${esc(b.title)}">${songArt(b) ? `<img src="${songArt(b)}" alt="">` : ic("image")}</button>
+    <button class="btn icon primary" data-act="play" data-id="${b.id}" aria-label="${on ? "Pause" : "Play"} ${esc(b.title)}" style="--t1:${tint}">${ic(on ? "pause" : "play")}</button>
+    <button type="button" class="song-text" data-act="open-song" data-id="${b.id}"><b>${esc(b.title)}</b><small>${esc(creditLine(b)) || "No splits yet"}</small></button>
+    <span class="mono song-len">${fmt(b.len)}</span>
+    <button class="btn icon sm quiet" data-act="open-song" data-id="${b.id}" aria-label="Edit splits for ${esc(b.title)}">${ic("edit")}</button>
+  </div>`;
+}
+
 function viewCollabs() {
   const sel = S.collabs.find((c) => c.id === S.collab) || null;
   const waiting = S.collabs.filter((c) => c.status === "waiting").length;
+  const songs = collabSongs().filter((b) => here("collaborations", b)), all = collabSongs().length;
   return `<section class="view">
     <div class="head">
-      <div><div class="kicker">Shared sessions</div><h1>Collaborations</h1><p>${S.collabs.length} ${S.collabs.length === 1 ? "person" : "people"}${waiting ? ` · ${waiting} waiting on you` : ""}</p></div>
-      <div class="head-actions"><button class="btn primary" data-act="add-collab" style="--t1:var(--water);--t2:var(--sky)">${ic("plus")}Add Collaborator</button></div>
+      <div><div class="kicker">Shared sessions</div><h1>Collaborations</h1><p>${all} ${all === 1 ? "song" : "songs"} · ${S.collabs.length} ${S.collabs.length === 1 ? "person" : "people"}${waiting ? ` · ${waiting} waiting on you` : ""}</p></div>
+      <div class="head-actions">${folderBtn("collaborations")}<button class="btn" data-act="add-collab">${ic("plus")}Add Collaborator</button><button class="btn primary" data-act="add-song" style="--t1:var(--water);--t2:var(--sky)">${ic("upload")}Upload</button></div>
     </div>
+    ${folderBar("collaborations")}
+    <h2 class="sub kicker">Songs</h2>
+    ${songs.length ? `<div class="songs">${songs.map(songRow).join("")}</div>` :
+      `<div class="empty glass slim"><h3>${S.open.collaborations ? "This folder is empty" : "No collab songs yet"}</h3><p>Upload a song you made with someone and set who gets what split.</p><button class="btn primary" data-act="add-song" style="--t1:var(--water);--t2:var(--sky)">${ic("upload")}Upload</button></div>`}
+    ${S.open.collaborations ? "" : `<h2 class="sub kicker">People</h2>
     <div class="collab-layout">
-      <div class="people"${S.collabs.length ? "" : ' style="grid-column:1/-1"'}>${S.collabs.length ? S.collabs.map(personRow).join("") : `<div class="empty glass"><h3>No collaborators yet</h3><p>Add the people you make music with, then share beats and keep a split sheet.</p><button class="btn primary" data-act="add-collab" style="--t1:var(--water);--t2:var(--sky)">${ic("plus")}Add Collaborator</button></div>`}</div>
+      <div class="people"${S.collabs.length ? "" : ' style="grid-column:1/-1"'}>${S.collabs.length ? S.collabs.map(personRow).join("") : `<div class="empty glass slim"><h3>No collaborators yet</h3><p>Add the people you make music with. Anyone you name in a song's splits is added here too.</p><button class="btn" data-act="add-collab">${ic("plus")}Add Collaborator</button></div>`}</div>
       ${S.collabs.length ? collabDetail(sel, "desktop") : ""}
-    </div>
+    </div>`}
   </section>`;
 }
 
@@ -1188,6 +1261,7 @@ function projectDetail(id) {
           <button type="button" class="drop drop-sm" id="p-drop" data-act="upload-tracks" data-project="${p.id}">${ic("upload")}<b>Upload songs to this project</b><span>Choose one or more files, or drop them here · MP3, WAV, AIFF, FLAC</span></button>
           ${options ? `<div class="compose"><label class="sr" for="add-track">Add a beat</label><select class="field" id="add-track">${options}</select><button class="btn" data-act="track" data-project="${p.id}">${ic("plus")}Add</button></div>` : ""}
         </div></div>
+      ${foldersIn("projects").length ? `<label><span class="kicker">Folder</span>${folderSelect("projects", p.folder, "project", p.id)}</label>` : ""}
       ${p.notes ? `<div><div class="kicker" style="margin-bottom:8px">Notes</div><p style="margin:0;max-width:60ch">${esc(p.notes)}</p></div>` : ""}
       <div class="form-actions" style="justify-content:space-between"><button class="btn sm quiet danger" data-act="del-project" data-id="${p.id}">${ic("trash")}Delete project</button><button class="btn" data-act="close">Done</button></div>
     </div>`, true);
@@ -1205,6 +1279,131 @@ function collabForm() {
       <p class="err" id="f-err" hidden></p>
       <div class="form-actions"><button type="button" class="btn quiet" data-act="close">Cancel</button><button class="btn primary" type="submit" style="--t1:var(--water);--t2:var(--sky)">${ic("plus")}Add collaborator</button></div>
     </form>`);
+}
+
+/* ----------------------------------------------------------- folders */
+const SEC_NOUN = { beats: "beats", projects: "projects", collaborations: "songs" };
+const folderBtn = (sec) => `<button class="btn" data-act="new-folder" data-sec="${sec}">${ic("folderPlus")}<span class="hide-sm">New folder</span><span class="show-sm">Folder</span></button>`;
+function folderCount(sec, f) {
+  return sec === "beats" ? libBeats().filter((b) => b.folder === f.id).length : sec === "projects" ? S.projects.filter((p) => p.folder === f.id).length : collabSongs().filter((b) => b.folder === f.id).length;
+}
+function folderBar(sec) {
+  const open = folderById(S.open[sec]);
+  if (open) return `<div class="crumb glass">
+      <button class="btn sm" data-act="close-folder" data-sec="${sec}">${ic("back")}All ${SEC_NOUN[sec]}</button>
+      <span class="crumb-name">${ic("folder")}<b>${esc(open.name)}</b></span>
+      <span class="crumb-acts"><button class="btn sm quiet" data-act="rename-folder" data-id="${open.id}">${ic("edit")}Rename</button><button class="btn sm quiet danger" data-act="del-folder" data-id="${open.id}">${ic("trash")}Delete folder</button></span>
+    </div>`;
+  const fs = foldersIn(sec); if (!fs.length) return "";
+  return `<div class="folders">${fs.map((f, i) => { const n = folderCount(sec, f); return `<button class="folder glass" data-act="open-folder" data-sec="${sec}" data-id="${f.id}" style="--t1:${TINTS[i % 3][0]}"><span class="fi">${ic("folder")}</span><span class="ft"><b>${esc(f.name)}</b><small>${n} ${n === 1 ? SEC_NOUN[sec].replace(/s$/, "") : SEC_NOUN[sec]}</small></span></button>`; }).join("")}</div>`;
+}
+function folderSelect(sec, current, kind, id) {
+  return `<select class="field" data-move="${kind}" data-id="${id}"><option value="">No folder</option>${foldersIn(sec).map((f) => `<option value="${f.id}"${f.id === current ? " selected" : ""}>${esc(f.name)}</option>`).join("")}</select>`;
+}
+function folderForm(sec, f) {
+  openModal(`${modalHead(f ? "Rename folder" : "New folder", f ? esc(f.name) : `Folder for ${SEC_NOUN[sec]}`)}
+    <form class="form" data-form="folder" data-sec="${sec}" data-id="${f ? f.id : ""}">
+      <label>Name<input class="field" id="fo-name" value="${f ? esc(f.name) : ""}" placeholder="${sec === "beats" ? "Trap drafts" : sec === "projects" ? "Albums 2026" : "Sessions with Mira"}" autocomplete="off" required autofocus></label>
+      <p class="err" id="f-err" hidden></p>
+      <div class="form-actions"><button type="button" class="btn quiet" data-act="close">Cancel</button><button class="btn primary" type="submit">${ic(f ? "edit" : "folderPlus")}${f ? "Save" : "Create folder"}</button></div>
+    </form>`);
+}
+
+/* ------------------------------------------------------- beat menu */
+function beatMenu(id) {
+  const b = beatById(id); if (!b) return;
+  openModal(`${modalHead("Beat", esc(b.title))}
+    <div class="form">
+      <div class="art-row"><button type="button" class="art-tile" data-act="art" data-kind="song" data-id="${b.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} cover art">${artOf(b.id) ? `<img src="${artOf(b.id)}" alt="">` : ic("image")}</button>
+        <div style="display:grid;gap:8px"><div class="kicker">Cover art</div><div class="acts"><button type="button" class="btn sm" data-act="art" data-kind="song" data-id="${b.id}">${ic("image")}${artOf(b.id) ? "Change art" : "Add cover art"}</button></div></div></div>
+      ${foldersIn("beats").length ? `<label><span class="kicker">Folder</span>${folderSelect("beats", b.folder, "beat", b.id)}</label>` : `<p style="margin:0;color:var(--ink-soft);font-size:13.5px">Make a folder with the Folder button to sort your beats.</p>`}
+      <div class="form-actions" style="justify-content:space-between"><button class="btn sm quiet danger" data-act="del-beat" data-id="${b.id}">${ic("trash")}Delete beat</button><button class="btn" data-act="close">Done</button></div>
+    </div>`);
+}
+
+/* ------------------------------------------- upload into a project */
+let sectionFiles = [];
+function projectUploadForm() {
+  sectionFiles = [];
+  const ps = S.projects.filter((p) => here("projects", p)).concat(S.projects.filter((p) => !here("projects", p)));
+  openModal(`${modalHead("Upload", "Add songs to a project")}
+    <form class="form" data-form="proj-upload" novalidate>
+      <button type="button" class="drop" id="drop" data-act="pick-multi">${ic("upload")}<b id="drop-label">Choose audio files</b><span id="drop-sub">Pick one or more · MP3, WAV, AIFF, FLAC</span></button>
+      <label>Project<select class="field" id="pu-target">${ps.map((p) => `<option value="${p.id}">${esc(p.title)}</option>`).join("")}<option value="__new"${ps.length ? "" : " selected"}>New project…</option></select></label>
+      <label id="pu-new"${ps.length ? " hidden" : ""}>New project name<input class="field" id="pu-name" placeholder="Blue Hour" autocomplete="off"></label>
+      <p class="err" id="f-err" hidden></p>
+      <div class="form-actions"><button type="button" class="btn quiet" data-act="close">Cancel</button><button class="btn primary" type="submit" style="--t1:var(--sky);--t2:var(--peach)">${ic("upload")}Upload</button></div>
+    </form>`);
+}
+function takeMany(files) {
+  const audio = [...files].filter(isAudio);
+  if (!audio.length) { showErr("Those files aren't audio. Pick MP3, WAV, AIFF or FLAC."); return; }
+  sectionFiles = audio; showErr("");
+  $("#drop-label").textContent = audio.length === 1 ? audio[0].name : `${audio.length} songs chosen`;
+  $("#drop-sub").textContent = `${(audio.reduce((a, f) => a + f.size, 0) / 1048576).toFixed(1)} MB · ready to upload`;
+}
+
+/* ------------------------------------------- collab songs and splits */
+const creditRow = ([who, pct]) => `<div class="credit"><input class="field" list="people-list" placeholder="Name" value="${esc(who)}" aria-label="Name" autocomplete="off"><span class="pct-wrap"><input class="field mono" type="number" min="0" max="100" step="any" inputmode="decimal" value="${pct === "" ? "" : pctFmt(pct)}" aria-label="Split percent"><span>%</span></span><button type="button" class="btn icon sm quiet" data-act="credit-del" aria-label="Remove person">${ic("x")}</button></div>`;
+function creditsEditor(credits) {
+  return `<div><div class="kicker" style="margin-bottom:8px">Collaborators and splits</div>
+    <div class="credits" id="credits">${credits.map(creditRow).join("")}</div>
+    <div class="credit-tools"><button type="button" class="btn sm" data-act="credit-add">${ic("plus")}Add person</button><button type="button" class="btn sm quiet" data-act="credit-even">Split evenly</button><span class="credit-total mono" id="credit-total"></span></div>
+    <datalist id="people-list"><option value="${ME}">${S.collabs.map((c) => `<option value="${esc(c.name)}">`).join("")}</datalist></div>`;
+}
+function readCredits() {
+  return [...document.querySelectorAll("#credits .credit")].map((r) => { const [n, p] = r.querySelectorAll("input"); return [n.value.trim(), Math.max(0, Math.min(100, parseFloat(p.value) || 0))]; }).filter(([n]) => n);
+}
+function updateTotal() {
+  const el = $("#credit-total"); if (!el) return;
+  const t = readCredits().reduce((a, [, p]) => a + p, 0), ok = Math.abs(t - 100) < .01;
+  el.textContent = ok ? "Total 100% ✓" : `Total ${pctFmt(t)}%`; el.classList.toggle("bad", !ok);
+}
+function checkCredits() {
+  const cr = readCredits();
+  if (!cr.length) return [null, "Add at least one person."];
+  const t = cr.reduce((a, [, p]) => a + p, 0);
+  if (Math.abs(t - 100) >= .01) return [null, `The splits add up to ${pctFmt(t)}%. They need to make 100%.`];
+  return [cr, ""];
+}
+function ensurePeople(credits) {
+  for (const [who] of credits) {
+    if (who.toLowerCase() === ME.toLowerCase() || S.collabs.some((c) => c.name.toLowerCase() === who.toLowerCase())) continue;
+    S.collabs.push({ id: uid("c"), name: who, role: "Collaborator", status: "active", tint: S.collabs.length % 3, beats: [], split: [[ME, 50], [who, 50]], notes: [] });
+  }
+}
+function songForm() {
+  pendingFile = null; pendingArt = null;
+  const c = S.collabs.find((x) => x.id === S.collab);
+  openModal(`${modalHead("Collaboration", "Upload a song")}
+    <form class="form" data-form="song" novalidate>
+      <button type="button" class="drop" id="drop" data-act="pick-file">${ic("upload")}<b id="drop-label">Choose an audio file</b><span id="drop-sub">or drop it here · MP3, WAV, AIFF, FLAC</span></button>
+      <div class="art-row"><button type="button" class="song-art" id="f-art" data-act="pick-art" aria-label="Add cover art" style="width:56px;height:56px;border-radius:16px">${ic("image")}</button><div><b style="font-size:14px">Cover art</b><div style="font-size:12.5px;color:var(--ink-soft)">Optional. Tap the square to pick an image.</div></div></div>
+      <label>Title<input class="field" id="f-title" placeholder="Late Call" autocomplete="off" required></label>
+      ${creditsEditor(c ? [[ME, 50], [c.name, 50]] : [[ME, 50], ["", 50]])}
+      <p class="err" id="f-err" hidden></p>
+      <div class="form-actions"><button type="button" class="btn quiet" data-act="close">Cancel</button><button class="btn primary" type="submit" style="--t1:var(--water);--t2:var(--sky)">${ic("upload")}Save song</button></div>
+    </form>`);
+  updateTotal();
+  const drop = $("#drop");
+  ["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", (e) => { const f = e.dataTransfer?.files?.[0]; if (f) takeFile(f); });
+}
+function songDetail(id) {
+  const b = beatById(id); if (!b) return;
+  const on = S.nowId === b.id && S.playing;
+  openModal(`${modalHead(`Collaboration · ${fmt(b.len)}`, esc(b.title))}
+    <form class="form" data-form="song-edit" data-id="${b.id}" novalidate>
+      <div class="art-row"><button type="button" class="art-tile" data-act="art" data-kind="song" data-id="${b.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} cover art">${artOf(b.id) ? `<img src="${artOf(b.id)}" alt="">` : ic("image")}</button>
+        <div style="display:grid;gap:8px"><div class="kicker">Cover art</div><div class="acts"><button type="button" class="btn sm" data-act="art" data-kind="song" data-id="${b.id}">${ic("image")}${artOf(b.id) ? "Change art" : "Add cover art"}</button><button type="button" class="btn sm primary" data-act="play" data-id="${b.id}" style="--t1:var(--water)">${ic(on ? "pause" : "play")}${on ? "Pause" : "Play"}</button></div></div></div>
+      <label>Title<input class="field" id="f-title" value="${esc(b.title)}" autocomplete="off" required></label>
+      ${creditsEditor(b.credits?.length ? b.credits : [[ME, 100]])}
+      ${foldersIn("collaborations").length ? `<label><span class="kicker">Folder</span>${folderSelect("collaborations", b.folder, "song", b.id)}</label>` : ""}
+      <p class="err" id="f-err" hidden></p>
+      <div class="form-actions" style="justify-content:space-between"><button type="button" class="btn sm quiet danger" data-act="del-song" data-id="${b.id}">${ic("trash")}Delete song</button><span style="display:flex;gap:8px"><button type="button" class="btn quiet" data-act="close">Cancel</button><button class="btn primary" type="submit" style="--t1:var(--water);--t2:var(--sky)">Save</button></span></div>
+    </form>`);
+  updateTotal();
 }
 
 /* ------------------------------------------------------------- toast */
@@ -1245,6 +1444,7 @@ document.addEventListener("click", async (e) => {
         S.collabs.forEach((c) => (c.beats = c.beats.filter((x) => x !== id)));
         if (b?.source === "file") delBlob(id);
         if (b?.art) dropArt(b);
+        if (!scrim.hidden) closeModal();
         persist(); renderAll(); toast(`Deleted ${b?.title ?? "beat"}`);
       });
       break; }
@@ -1258,6 +1458,23 @@ document.addEventListener("click", async (e) => {
     case "pick-art": artTarget = { kind: "pending" }; $("#img-file").click(); break;
     case "art": artTarget = { kind: el.dataset.kind, id, project: el.dataset.project }; $("#img-file").click(); break;
     case "art-remove": { const p = S.projects.find((x) => x.id === id); if (p) { dropArt(p); persist(); renderMain(); renderPlayer(); projectDetail(p.id); toast("Removed album art"); } break; }
+    case "new-folder": folderForm(el.dataset.sec); break;
+    case "rename-folder": folderForm(folderById(id)?.section, folderById(id)); break;
+    case "open-folder": S.open[el.dataset.sec] = id; S.query = ""; renderMain(); window.scrollTo({ top: 0 }); break;
+    case "close-folder": S.open[el.dataset.sec] = null; renderMain(); break;
+    case "del-folder": { const f = folderById(id); confirmTap(el, id, "Tap again to delete", () => {
+      [...S.beats, ...S.projects].forEach((x) => { if (x.folder === id) x.folder = null; });
+      S.folders = S.folders.filter((x) => x.id !== id); S.open[f.section] = null; persist(); renderMain(); toast(`Deleted folder ${f.name}. What was in it is back at the top.`); }); break; }
+    case "beat-menu": beatMenu(id); break;
+    case "upload-section": projectUploadForm(); break;
+    case "pick-multi": $("#p-file").dataset.mode = "section"; $("#p-file").click(); break;
+    case "add-song": songForm(); break;
+    case "open-song": songDetail(id); break;
+    case "del-song": { const b = beatById(id); confirmTap(el, id, "Tap again to delete", () => { removeProjectSong(b); persist(); closeModal(); renderMain(); toast(`Deleted ${b.title}`); }); break; }
+    case "credit-add": $("#credits").insertAdjacentHTML("beforeend", creditRow(["", ""])); $("#credits .credit:last-child input").focus(); updateTotal(); break;
+    case "credit-del": el.closest(".credit").remove(); updateTotal(); break;
+    case "credit-even": { const rows = [...document.querySelectorAll("#credits .credit")]; if (!rows.length) break; const each = Math.floor(10000 / rows.length) / 100;
+      rows.forEach((r, i) => (r.querySelectorAll("input")[1].value = pctFmt(i === 0 ? 100 - each * (rows.length - 1) : each))); updateTotal(); break; }
     case "upload-tracks": uploadTarget = el.dataset.project; $("#p-file").click(); break;
     case "del-project": confirmTap(el, id, "Tap again to delete", () => { const p = S.projects.find((x) => x.id === id); S.beats.filter((b) => b.project === id).forEach(removeProjectSong); if (p?.art) dropArt(p); S.projects = S.projects.filter((x) => x.id !== id); persist(); closeModal(); renderMain(); toast(`Deleted ${p?.title}`); }); break;
     case "add-collab": collabForm(); break;
@@ -1316,10 +1533,23 @@ $("#img-file").addEventListener("change", async (e) => {
   if (artTarget.kind === "pending") { pendingArt = f; const u = URL.createObjectURL(f), el = $("#f-art"); if (el) el.innerHTML = `<img src="${u}" alt="">`; return; }
   const t = artTarget, item = t.kind === "project" ? S.projects.find((x) => x.id === t.id) : beatById(t.id); if (!item) return;
   await setArt(item, f); persist(); renderMain(); renderPlayer();
-  const pid = t.kind === "project" ? t.id : t.project; if (!scrim.hidden && pid) projectDetail(pid);
+  const pid = t.kind === "project" ? t.id : t.project;
+  if (!scrim.hidden) { if (pid) projectDetail(pid); else if (modal.querySelector('[data-form="song-edit"]')) songDetail(item.id); else if (modal.querySelector('[data-act="beat-menu"], [data-act="del-beat"]')) beatMenu(item.id); }
   toast(t.kind === "project" ? "Album art added" : `Art added to ${item.title}`);
 });
-$("#p-file").addEventListener("change", (e) => { const fs = e.target.files; if (fs?.length && uploadTarget) addProjectFiles(uploadTarget, fs); e.target.value = ""; });
+$("#p-file").addEventListener("change", (e) => {
+  const fs = e.target.files, mode = e.target.dataset.mode; e.target.dataset.mode = "";
+  if (fs?.length) { if (mode === "section") takeMany(fs); else if (uploadTarget) addProjectFiles(uploadTarget, fs); }
+  e.target.value = "";
+});
+document.addEventListener("change", (e) => {
+  if (e.target.id === "pu-target") { $("#pu-new").hidden = e.target.value !== "__new"; return; }
+  const sel = e.target.closest("[data-move]"); if (!sel) return;
+  const kind = sel.dataset.move, item = kind === "project" ? S.projects.find((p) => p.id === sel.dataset.id) : beatById(sel.dataset.id); if (!item) return;
+  item.folder = sel.value || null; persist(); renderMain();
+  toast(sel.value ? `Moved to ${folderById(sel.value).name}` : "Moved out of the folder");
+});
+document.addEventListener("input", (e) => { if (e.target.closest("#credits")) { updateTotal(); showErr(""); } });
 ["dragenter", "dragover"].forEach((ev) => document.addEventListener(ev, (e) => { const d = e.target.closest?.("#p-drop"); if (d) { e.preventDefault(); d.classList.add("over"); } }));
 ["dragleave", "drop"].forEach((ev) => document.addEventListener(ev, (e) => { const d = e.target.closest?.("#p-drop"); if (d) { e.preventDefault(); d.classList.remove("over"); } }));
 document.addEventListener("drop", (e) => { const d = e.target.closest?.("#p-drop"); if (d && e.dataTransfer?.files?.length) addProjectFiles(d.dataset.project, e.dataTransfer.files); });
@@ -1336,13 +1566,49 @@ document.addEventListener("submit", async (e) => {
     const id = uid("b"), info = await analyse(pendingFile);
     await putBlob(id, pendingFile);
     const bpm = parseInt($("#f-bpm").value, 10);
-    S.beats.unshift({ id, title, bpm: bpm > 0 ? bpm : null, key: $("#f-key").value || null, genre: $("#f-genre").value, len: info.len, peaks: info.peaks, source: "file", added: Date.now() });
+    S.beats.unshift({ id, title, bpm: bpm > 0 ? bpm : null, key: $("#f-key").value || null, genre: $("#f-genre").value, len: info.len, peaks: info.peaks, source: "file", folder: S.open.beats, added: Date.now() });
     if (pendingArt) await setArt(S.beats[0], pendingArt);
     persist(); closeModal(); S.genre = "All"; S.query = ""; renderAll(); toast(`Added ${title}`);
   }
+  if (kind === "folder") {
+    const name = $("#fo-name").value.trim(); if (!name) return showErr("Give the folder a name.");
+    const f = folderById(form.dataset.id);
+    if (f) { f.name = name; toast(`Renamed to ${name}`); }
+    else { const sec = form.dataset.sec, nf = { id: uid("f"), name, section: sec }; S.folders.push(nf); S.open[sec] = nf.id; toast(`Created folder ${name}`); }
+    persist(); closeModal(); renderMain();
+  }
+  if (kind === "proj-upload") {
+    if (!sectionFiles.length) return showErr("Choose your audio files first.");
+    let pid = $("#pu-target").value;
+    if (pid === "__new") {
+      const title = $("#pu-name").value.trim(); if (!title) return showErr("Give the new project a name.");
+      pid = uid("p"); S.projects.unshift({ id: pid, title, artist: "Earnie", due: "", stage: 0, beats: [], tint: S.projects.length % 3, notes: "", folder: S.open.projects });
+    }
+    const btn = form.querySelector('[type="submit"]'); btn.disabled = true; btn.textContent = "Uploading…";
+    const files = sectionFiles; sectionFiles = []; closeModal();
+    await addProjectFiles(pid, files);
+  }
+  if (kind === "song" || kind === "song-edit") {
+    const title = $("#f-title").value.trim();
+    if (kind === "song" && !pendingFile) return showErr("Choose an audio file first.");
+    if (!title) return showErr("Give the song a title.");
+    const [credits, err] = checkCredits(); if (!credits) return showErr(err);
+    ensurePeople(credits);
+    if (kind === "song") {
+      const btn = form.querySelector('[type="submit"]'); btn.disabled = true; btn.textContent = "Saving…";
+      const id = uid("b"), info = await analyse(pendingFile);
+      await putBlob(id, pendingFile);
+      S.beats.unshift({ id, title, bpm: null, key: null, genre: null, len: info.len, peaks: info.peaks, source: "file", area: "collab", credits, folder: S.open.collaborations, added: Date.now() });
+      if (pendingArt) await setArt(S.beats[0], pendingArt);
+      toast(`Added ${title}`);
+    } else {
+      const b = beatById(form.dataset.id); b.title = title; b.credits = credits; toast("Splits saved");
+    }
+    persist(); closeModal(); renderAll();
+  }
   if (kind === "project") {
     const title = $("#p-title").value.trim(); if (!title) return showErr("Give the project a name.");
-    S.projects.unshift({ id: uid("p"), title, artist: $("#p-artist").value.trim() || "Earnie", due: $("#p-due").value, stage: 0, beats: [], tint: S.projects.length % 3, notes: $("#p-notes").value.trim() });
+    S.projects.unshift({ id: uid("p"), title, artist: $("#p-artist").value.trim() || "Earnie", due: $("#p-due").value, stage: 0, beats: [], tint: S.projects.length % 3, notes: $("#p-notes").value.trim(), folder: S.open.projects });
     persist(); closeModal(); renderMain(); toast(`Created ${title}`);
   }
   if (kind === "collab") {
