@@ -381,6 +381,44 @@ h2.sub { margin: 4px 0 12px; }
 .q-hint { margin: 0; color: var(--ink-soft); font-size: 13.5px; }
 .mini.now-row { box-shadow: 0 0 0 1px var(--hairline); border-radius: 18px; }
 
+/* ----------------------------------------------------------- visualizer */
+.player-art, .now { cursor: pointer; }
+.viz { position: fixed; inset: 0; z-index: 35; display: flex; flex-direction: column; background: var(--ivory); overflow: hidden;
+  padding: max(14px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  animation: viz-in .45s cubic-bezier(.22,1,.36,1); }
+.viz[hidden] { display: none !important; }
+.viz.closing { animation: viz-out .28s ease forwards; }
+@keyframes viz-in { from { opacity: 0; transform: translateY(40px) scale(.98); } }
+@keyframes viz-out { to { opacity: 0; transform: translateY(40px) scale(.98); } }
+#viz-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.viz-top { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.viz-top .kicker { flex: 1; text-align: center; }
+.viz-stage { position: relative; flex: 1; display: grid; place-items: center; min-height: 0; }
+.viz-disc { --s: 1; width: min(46vw, 34vh, 260px); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; transform: scale(var(--s));
+  background: radial-gradient(circle at 30% 25%, #fff, rgba(255,255,255,.55) 45%, rgba(255,255,255,.25)), var(--now-tint, var(--peach));
+  background-size: cover; background-position: center;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.9), 0 0 0 10px rgba(255,255,255,.35), 0 30px 60px -20px rgba(var(--shadow),.45), inset 0 2px 6px #fff; }
+.viz-disc .vinyl { width: 78%; height: 78%; }
+.viz-disc .vinyl::after { width: 26%; height: 26%; box-shadow: 0 0 0 6px rgba(255,255,255,.9); }
+.viz-disc.has-art .vinyl { display: none; }
+.viz.mode-bars .viz-stage { place-items: start center; padding-top: 2vh; }
+.viz.mode-bars .viz-disc { width: min(34vw, 24vh, 190px); }
+.viz-disc.spin { animation: spin 9s linear infinite; }
+.viz-disc.has-art.spin { animation-duration: 14s; }
+.viz-info { position: relative; width: min(560px, 100%); margin: 0 auto; border-radius: 28px; padding: 16px 18px 14px; display: grid; gap: 10px; }
+.viz-title { text-align: center; min-width: 0; }
+.viz-title b { display: block; font: 600 clamp(22px, 5vw, 30px)/1.15 var(--f-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.viz-title small { color: var(--ink-soft); font-size: 13px; }
+.viz-prog { display: grid; grid-template-columns: 40px 1fr 40px; gap: 10px; align-items: center; font-size: 12px; color: var(--ink-soft); }
+.viz-prog span:last-child { text-align: right; }
+.viz-bar { position: relative; height: 26px; display: flex; align-items: center; cursor: pointer; touch-action: none; }
+.viz-bar::before { content: ""; position: absolute; left: 0; right: 0; height: 6px; border-radius: 999px; background: rgba(48,52,58,.08); }
+.viz-bar i { position: relative; height: 6px; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--peach), var(--sky), var(--water)); }
+.viz-ctrl { justify-content: center; gap: 12px; }
+.viz-ctrl .main { width: 60px; min-height: 60px; }
+.viz-ctrl .main svg { width: 22px; height: 22px; }
+html.viz-open { overflow: hidden; }
+
 /* ---------------------------------------------------------------- modal */
 .scrim { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 20px max(16px, env(safe-area-inset-left, 0px)); background: rgba(247,246,242,.5); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: fade .2s ease; }
 .scrim[hidden] { display: none !important; }
@@ -646,8 +684,8 @@ h2.sub { margin: 4px 0 12px; }
 <div class="tabbar"><nav class="tabs glass" id="tabs-bottom" aria-label="Sections"></nav></div>
 
 <section class="player glass dense" id="player" hidden aria-label="Audio player">
-  <div class="player-art lit" id="pl-art"><div class="vinyl"></div></div>
-  <div class="now"><b id="pl-title"></b><small id="pl-meta"></small></div>
+  <div class="player-art lit" id="pl-art" data-act="viz" role="button" tabindex="0" aria-label="Open visualizer"><div class="vinyl"></div></div>
+  <div class="now" data-act="viz" role="button" tabindex="0" aria-label="Open visualizer"><b id="pl-title"></b><small id="pl-meta"></small></div>
   <div class="scrub">
     <span class="mono" id="pl-time">0:00</span>
     <div class="track" id="pl-track" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
@@ -664,6 +702,27 @@ h2.sub { margin: 4px 0 12px; }
     <button class="btn icon sm quiet mode" data-act="repeat" id="pl-repeat" aria-label="Repeat off"></button>
   </div>
   <button class="btn icon sm quiet pl-queue" data-act="queue" id="pl-queue" aria-label="Up next"></button>
+</section>
+
+<section class="viz" id="viz" hidden role="dialog" aria-modal="true" aria-label="Visualizer">
+  <canvas id="viz-canvas" aria-hidden="true"></canvas>
+  <div class="viz-top">
+    <button class="btn icon sm" data-act="viz-close" aria-label="Close visualizer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    <div class="kicker">Now playing</div>
+    <button class="btn sm" data-act="viz-mode" id="viz-mode" aria-label="Change visualizer style">Halo</button>
+  </div>
+  <div class="viz-stage" id="viz-stage"><div class="viz-disc" id="viz-disc"><div class="vinyl"></div></div></div>
+  <div class="viz-info glass dense">
+    <div class="viz-title"><b id="viz-title"></b><small id="viz-meta"></small></div>
+    <div class="viz-prog"><span class="mono" id="viz-time">0:00</span><div class="viz-bar" id="viz-bar"><i id="viz-fill"></i></div><span class="mono" id="viz-len">0:00</span></div>
+    <div class="controls viz-ctrl">
+      <button class="btn icon sm quiet mode" data-act="shuffle" id="viz-shuffle" aria-label="Shuffle"></button>
+      <button class="btn icon side" data-act="prev" aria-label="Previous beat"></button>
+      <button class="btn icon primary main" data-act="toggle" id="viz-toggle" aria-label="Play"></button>
+      <button class="btn icon side" data-act="next" aria-label="Next beat"></button>
+      <button class="btn icon sm quiet mode" data-act="repeat" id="viz-repeat" aria-label="Repeat"></button>
+    </div>
+  </div>
 </section>
 
 <div class="scrim" id="scrim" hidden><div class="modal glass dense" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"></div></div>
@@ -1241,7 +1300,7 @@ function renderPlayer() {
   el.hidden = !b;
   updateMediaSession();
   document.documentElement.style.setProperty("--player-h", b ? (matchMedia("(max-width:720px)").matches ? "160px" : "86px") : "0px");
-  if (!b) return;
+  if (!b) { if (typeof closeViz === "function") closeViz(); return; }
   const [tint, ink] = beatTint(b);
   el.style.setProperty("--now-tint", tint); el.style.setProperty("--now-ink", ink); el.style.setProperty("--t1", tint);
   $("#pl-art").classList.toggle("spinning", S.playing);
@@ -1255,6 +1314,7 @@ function renderPlayer() {
   const rp = $("#pl-repeat"); rp.innerHTML = ic(S.repeat === "one" ? "repeatOne" : "repeat"); rp.classList.toggle("lit", S.repeat !== "off"); rp.setAttribute("aria-label", { off: "Repeat off", all: "Repeat all", one: "Repeat this song" }[S.repeat]);
   const qn = S.queue.filter(beatById).length; $("#pl-queue").innerHTML = ic("queue") + (qn ? `<span class="count">${qn}</span>` : "");
   $("#pl-queue").setAttribute("aria-label", qn ? `Up next, ${qn} queued` : "Up next");
+  vizRender();
   tick(true);
 }
 
@@ -1525,6 +1585,196 @@ function songDetail(id) {
   updateTotal();
 }
 
+/* ------------------------------------------------------- visualizer */
+/* Reads the decoded song next to the audio element instead of tapping it, so
+   playback keeps going in the background and on the lock screen. */
+const viz = $("#viz"), vizCv = $("#viz-canvas"), vizCx = vizCv.getContext("2d");
+const VIZ_MODES = ["Halo", "Bars", "Wave"];
+let vizMode = (() => { try { return Math.max(0, VIZ_MODES.indexOf(localStorage.getItem("earnies-viz-mode"))); } catch { return 0; } })();
+let vizRaf = 0, vizPcm = null, vizPcmId = null, vizLoading = null, vizT0 = 0;
+const FFT_N = 1024, BANDS = 64;
+const vizBands = new Float32Array(BANDS), vizWave = new Float32Array(128);
+let vizPeak = .5, vizBass = 0, vizEnergy = 0, vizSpin = 0, vizBubbles = [];
+const VIZ_COLS = [[233, 154, 106], [109, 179, 224], [77, 191, 175]];   // deeper peach, sky, water so they read on ivory
+const mixCol = (t, a = 1) => { t = ((t % 1) + 1) % 1; const f = t * 3, i = Math.floor(f) % 3, j = (i + 1) % 3, k = f - Math.floor(f); const c = VIZ_COLS[i].map((v, n) => Math.round(v + (VIZ_COLS[j][n] - v) * k)); return `rgba(${c[0]},${c[1]},${c[2]},${a})`; };
+
+async function vizLoad(b) {
+  if (!b || b.source !== "file") { vizPcm = null; vizPcmId = b?.id || null; return; }
+  if (vizPcmId === b.id && (vizPcm || vizLoading)) return;
+  vizPcmId = b.id; vizPcm = null;
+  const job = vizLoading = (async () => {
+    const blob = await getBlob(b.id); if (!blob) return null;
+    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    const buf = await new OAC(1, 1, 44100).decodeAudioData(await blob.arrayBuffer());
+    const step = buf.sampleRate > 30000 ? 2 : 1, len = Math.floor(buf.length / step), out = new Float32Array(len), chs = buf.numberOfChannels;
+    for (let c = 0; c < chs; c++) { const d = buf.getChannelData(c); for (let i = 0; i < len; i++) out[i] += d[i * step] / chs; }
+    return { data: out, rate: buf.sampleRate / step };
+  })().catch(() => null);
+  const res = await job;
+  if (vizLoading === job) { vizLoading = null; if (vizPcmId === b.id) vizPcm = res; }
+}
+
+/* In-place radix-2 FFT. */
+const fftRe = new Float32Array(FFT_N), fftIm = new Float32Array(FFT_N), hann = Float32Array.from({ length: FFT_N }, (_, i) => .5 - .5 * Math.cos((2 * Math.PI * i) / (FFT_N - 1)));
+function fft(re, im) {
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) { let bit = n >> 1; for (; j & bit; bit >>= 1) j ^= bit; j ^= bit; if (i < j) { [re[i], re[j]] = [re[j], re[i]]; [im[i], im[j]] = [im[j], im[i]]; } }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = (-2 * Math.PI) / len, wr = Math.cos(ang), wi = Math.sin(ang);
+    for (let i = 0; i < n; i += len) { let cr = 1, ci = 0;
+      for (let k = 0; k < len / 2; k++) { const a = i + k, b2 = a + len / 2, tr = re[b2] * cr - im[b2] * ci, ti = re[b2] * ci + im[b2] * cr;
+        re[b2] = re[a] - tr; im[b2] = im[a] - ti; re[a] += tr; im[a] += ti; const nr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = nr; } } }
+}
+function vizAnalyse(t) {
+  const on = S.playing;
+  if (vizPcm && on) {
+    const { data, rate } = vizPcm, start = Math.floor(position() * rate) - FFT_N / 2;
+    for (let i = 0; i < FFT_N; i++) { const v = data[start + i] || 0; fftRe[i] = v * hann[i]; fftIm[i] = 0; }
+    for (let i = 0; i < vizWave.length; i++) vizWave[i] = data[start + i * 8] || 0;
+    fft(fftRe, fftIm);
+    const binHz = rate / FFT_N, raw = new Float32Array(BANDS);
+    for (let b = 0; b < BANDS; b++) {
+      const lo = 32 * Math.pow(14000 / 32, b / BANDS), hi = 32 * Math.pow(14000 / 32, (b + 1) / BANDS);
+      let m = 0, n = 0; for (let k = Math.max(1, Math.floor(lo / binHz)); k <= Math.max(Math.floor(lo / binHz) + 1, Math.ceil(hi / binHz)) && k < FFT_N / 2; k++) { m += Math.hypot(fftRe[k], fftIm[k]); n++; }
+      const db = 20 * Math.log10((m / Math.max(1, n)) + 1e-6);
+      raw[b] = Math.max(0, (db + 48 + b * .1) / 56);
+    }
+    // auto gain, so quiet and loud masters both fill the screen without pinning at the top
+    let top = 0; for (let b = 0; b < BANDS; b++) top = Math.max(top, raw[b]);
+    vizPeak = Math.max(top, vizPeak * .996, .35);
+    for (let b = 0; b < BANDS; b++) { const v = Math.min(1, Math.pow(raw[b] / vizPeak, 1.6) * .95); vizBands[b] += (v - vizBands[b]) * (v > vizBands[b] ? .6 : .14); }
+  } else {
+    // synth beats, songs still decoding, or paused: a gentle groove from the clock
+    const beat = (t / 1000) * ((beatById(S.nowId)?.bpm || 90) / 60), ph = beat % 1, kick = on ? Math.exp(-ph * 6) : 0;
+    for (let b = 0; b < BANDS; b++) { const fr = b / BANDS, idle = .06 + .04 * Math.sin(t / 700 + b * .4);
+      const v = on ? Math.min(1, idle + kick * (1 - fr) * .8 + Math.random() * .15 * (1 - fr * .5)) : idle;
+      vizBands[b] += (v - vizBands[b]) * .12; }
+    for (let i = 0; i < vizWave.length; i++) vizWave[i] = on ? Math.sin(i / 6 + t / 120) * .25 * (.4 + kick) : 0;
+  }
+  let bass = 0, all = 0; for (let b = 0; b < BANDS; b++) { all += vizBands[b]; if (b < 9) bass += vizBands[b]; }
+  bass /= 9; all /= BANDS;
+  vizBass += (bass - vizBass) * (bass > vizBass ? .5 : .1); vizEnergy += (all - vizEnergy) * .15;
+}
+
+function vizSize() {
+  const dpr = Math.min(2, devicePixelRatio || 1), w = viz.clientWidth, h = viz.clientHeight;
+  if (vizCv.width !== Math.round(w * dpr) || vizCv.height !== Math.round(h * dpr)) { vizCv.width = Math.round(w * dpr); vizCv.height = Math.round(h * dpr); }
+  vizCx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [w, h];
+}
+function vizDraw(t) {
+  const [w, h] = vizSize(), c = vizCx, dt = Math.min(.05, (t - (vizT0 || t)) / 1000); vizT0 = t;
+  vizAnalyse(t);
+  const stage = $("#viz-stage").getBoundingClientRect(), vr = viz.getBoundingClientRect();
+  const cx = stage.left - vr.left + stage.width / 2, cy = stage.top - vr.top + stage.height / 2;
+  const disc = $("#viz-disc"), r0 = disc.offsetWidth / 2, pulse = 1 + vizBass * .09;
+  disc.style.setProperty("--s", pulse.toFixed(3));
+  vizSpin += dt * (.15 + vizEnergy * .6) * (S.playing ? 1 : .2);
+
+  // ivory base with drifting coloured light that swells on the kick
+  c.fillStyle = "#F7F6F2"; c.fillRect(0, 0, w, h);
+  const big = Math.max(w, h) * .8;
+  VIZ_COLS.forEach((col, i) => {
+    const a = vizSpin * .5 + i * 2.1, rr = big * (.42 + vizBass * .18 + i * .04);
+    const x = cx + Math.cos(a) * w * .28, y = cy + Math.sin(a * 1.3) * h * .22;
+    const g = c.createRadialGradient(x, y, 0, x, y, rr);
+    g.addColorStop(0, `rgba(${col[0]},${col[1]},${col[2]},${.16 + vizEnergy * .24})`); g.addColorStop(1, `rgba(${col[0]},${col[1]},${col[2]},0)`);
+    c.fillStyle = g; c.fillRect(0, 0, w, h);
+  });
+
+  // glass bubbles rising with the energy
+  if (vizBubbles.length < 26 && Math.random() < .08 + vizEnergy * .3) vizBubbles.push({ x: Math.random() * w, y: h + 20, r: 3 + Math.random() * 12, v: 20 + Math.random() * 40, ph: Math.random() * 6 });
+  vizBubbles = vizBubbles.filter((b) => b.y > -30);
+  vizBubbles.forEach((b) => { b.y -= b.v * dt * (1 + vizEnergy * 3); b.x += Math.sin(t / 900 + b.ph) * .3;
+    const g = c.createRadialGradient(b.x - b.r * .35, b.y - b.r * .35, 0, b.x, b.y, b.r);
+    g.addColorStop(0, "rgba(255,255,255,.95)"); g.addColorStop(.7, "rgba(255,255,255,.25)"); g.addColorStop(1, "rgba(255,255,255,.6)");
+    c.fillStyle = g; c.beginPath(); c.arc(b.x, b.y, b.r, 0, Math.PI * 2); c.fill(); });
+
+  c.lineCap = "round";
+  const mode = VIZ_MODES[vizMode], room = Math.min(stage.width, stage.height) / 2 - r0 * pulse;
+  if (mode === "Halo") {
+    const n = BANDS * 2, base = r0 * pulse + 14, maxL = Math.max(24, room - 10);
+    // soft glow ring
+    const gl = c.createRadialGradient(cx, cy, base - 10, cx, cy, base + maxL * (.4 + vizBass * .6));
+    gl.addColorStop(0, `rgba(255,255,255,${.5 + vizBass * .4})`); gl.addColorStop(1, "rgba(255,255,255,0)");
+    c.fillStyle = gl; c.beginPath(); c.arc(cx, cy, base + maxL, 0, Math.PI * 2); c.fill();
+    c.lineWidth = Math.max(2.5, (Math.PI * 2 * base) / n * .55);
+    for (let i = 0; i < n; i++) {
+      const bi = i < BANDS ? i : n - 1 - i, v = vizBands[bi], a = (i / n) * Math.PI * 2 - Math.PI / 2 + vizSpin * .25;
+      const L = 4 + v * maxL, x1 = cx + Math.cos(a) * base, y1 = cy + Math.sin(a) * base, x2 = cx + Math.cos(a) * (base + L), y2 = cy + Math.sin(a) * (base + L);
+      c.strokeStyle = mixCol(i / n + vizSpin * .05, .55 + v * .45); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+    }
+  } else if (mode === "Bars") {
+    const n = w < 700 ? 24 : 48, gap = w < 700 ? 5 : 6, bw = Math.min(16, (w - 32) / (n * 2) - gap), total = n * 2 * (bw + gap) - gap, x0 = (w - total) / 2;
+    const floor = stage.bottom - vr.top - stage.height * .14, maxH = Math.max(40, floor - (disc.getBoundingClientRect().bottom - vr.top) - 24);
+    const band = (k) => { const f = (k / n) * (BANDS - 1), i = Math.floor(f), m = f - i; return vizBands[i] * (1 - m) + (vizBands[i + 1] ?? vizBands[i]) * m; };
+    for (let i = 0; i < n * 2; i++) {
+      const v = band(i < n ? n - 1 - i : i - n), hgt = 6 + v * maxH, x = x0 + i * (bw + gap);
+      const g = c.createLinearGradient(0, floor - hgt, 0, floor);
+      g.addColorStop(0, mixCol(i / (n * 2), .95)); g.addColorStop(1, mixCol(i / (n * 2) + .3, .6));
+      c.fillStyle = g; c.beginPath(); c.roundRect ? c.roundRect(x, floor - hgt, bw, hgt, bw / 2) : c.rect(x, floor - hgt, bw, hgt); c.fill();
+      c.fillStyle = mixCol(i / (n * 2), .14); c.beginPath(); c.roundRect ? c.roundRect(x, floor + 6, bw, hgt * .3, bw / 2) : c.rect(x, floor + 6, bw, hgt * .3); c.fill();
+    }
+  } else {
+    for (let ring = 0; ring < 3; ring++) {
+      const base = r0 * pulse + 18 + ring * 16, amp = Math.max(18, room * .6) * (1 - ring * .25);
+      c.lineWidth = 3 - ring * .6; c.strokeStyle = mixCol(ring / 3 + vizSpin * .1, .85 - ring * .2); c.beginPath();
+      for (let i = 0; i <= vizWave.length; i++) {
+        const k = i % vizWave.length, a = (i / vizWave.length) * Math.PI * 2 + vizSpin * (ring % 2 ? -.3 : .3);
+        const rr = base + vizWave[k] * amp * (1 + vizBass) + vizBands[(k + ring * 7) % BANDS] * 10;
+        const x = cx + Math.cos(a) * rr, y = cy + Math.sin(a) * rr; i ? c.lineTo(x, y) : c.moveTo(x, y);
+      }
+      c.closePath(); c.stroke();
+    }
+  }
+  const d = duration(), p = position();
+  $("#viz-fill").style.width = `${d ? Math.min(100, (p / d) * 100) : 0}%`;
+  $("#viz-time").textContent = fmt(p); $("#viz-len").textContent = fmt(d);
+  vizRaf = requestAnimationFrame(vizDraw);
+}
+function vizRender() {
+  if (viz.hidden) return;
+  const b = P.src && beatById(S.nowId); if (!b) { closeViz(); return; }
+  const [tint] = beatTint(b), art = songArt(b), disc = $("#viz-disc");
+  viz.style.setProperty("--now-tint", tint);
+  disc.classList.toggle("has-art", !!art); disc.style.backgroundImage = art ? `url("${art}")` : "";
+  disc.classList.toggle("spin", S.playing && !reduceMotion);
+  $("#viz-title").textContent = b.title;
+  $("#viz-meta").textContent = [b.bpm ? `${b.bpm} BPM` : null, b.key ? `${b.key} ${camelot(b.key)}` : null, b.genre].filter(Boolean).join(" · ");
+  const t = $("#viz-toggle"); t.innerHTML = ic(S.playing ? "pause" : "play"); t.setAttribute("aria-label", S.playing ? "Pause" : "Play");
+  viz.querySelector('[data-act="prev"]').innerHTML = ic("prev"); viz.querySelector('[data-act="next"]').innerHTML = ic("next");
+  const sh = $("#viz-shuffle"); sh.innerHTML = ic("shuffle"); sh.classList.toggle("lit", S.shuffle); sh.setAttribute("aria-pressed", S.shuffle);
+  const rp = $("#viz-repeat"); rp.innerHTML = ic(S.repeat === "one" ? "repeatOne" : "repeat"); rp.classList.toggle("lit", S.repeat !== "off");
+  rp.setAttribute("aria-label", { off: "Repeat off", all: "Repeat all", one: "Repeat this song" }[S.repeat]);
+  $("#viz-mode").textContent = VIZ_MODES[vizMode]; viz.classList.toggle("mode-bars", VIZ_MODES[vizMode] === "Bars");
+  vizLoad(b);
+}
+function openViz() {
+  if (!P.src) return;
+  viz.hidden = false; viz.classList.remove("closing"); document.documentElement.classList.add("viz-open");
+  vizRender(); cancelAnimationFrame(vizRaf); vizT0 = 0; vizRaf = requestAnimationFrame(vizDraw);
+  setTimeout(() => $("#viz-toggle").focus({ preventScroll: true }), 50);
+}
+function closeViz() {
+  if (viz.hidden) return;
+  viz.classList.add("closing");
+  setTimeout(() => { viz.hidden = true; viz.classList.remove("closing"); cancelAnimationFrame(vizRaf); document.documentElement.classList.remove("viz-open"); }, 260);
+}
+document.addEventListener("keydown", (e) => {
+  if (viz.hidden) { if ((e.key === "Enter" || e.key === " ") && e.target.matches?.('[data-act="viz"]')) { e.preventDefault(); openViz(); } return; }
+  if (e.key === "Escape") closeViz();
+});
+// scrub inside the visualizer
+$("#viz-bar").addEventListener("pointerdown", (e) => {
+  const bar = e.currentTarget, go2 = (ev) => { const r = bar.getBoundingClientRect(); seek((ev.clientX - r.left) / r.width); };
+  go2(e); bar.setPointerCapture(e.pointerId);
+  const mv = (ev) => go2(ev), up = () => { bar.removeEventListener("pointermove", mv); bar.removeEventListener("pointerup", up); };
+  bar.addEventListener("pointermove", mv); bar.addEventListener("pointerup", up);
+});
+// swipe down to close
+{ let y0 = null; viz.addEventListener("touchstart", (e) => { y0 = e.target.closest(".viz-info,.viz-bar") ? null : e.touches[0].clientY; }, { passive: true });
+  viz.addEventListener("touchend", (e) => { if (y0 != null && e.changedTouches[0].clientY - y0 > 90) closeViz(); y0 = null; }, { passive: true }); }
+
 /* ------------------------------------------------------------- toast */
 let toastTimer;
 function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 2600); }
@@ -1541,7 +1791,7 @@ function confirmTap(btn, key, label, run) {
 /* ------------------------------------------------------------ events */
 document.addEventListener("click", async (e) => {
   const el = e.target.closest("[data-act], [data-tab]"); if (!el) {
-    const row = e.target.closest(".beat"); if (row && !e.target.closest("button")) playBeat(row.dataset.beat); return; }
+    const row = e.target.closest(".beat"); if (row && !e.target.closest("button")) { const id = row.dataset.beat; if (S.nowId !== id || !S.playing) await playBeat(id); openViz(); } return; }
   const a = el.dataset.act, id = el.dataset.id;
   if (el.dataset.tab) { e.preventDefault(); go(el.dataset.tab); return; }
   switch (a) {
@@ -1553,6 +1803,9 @@ document.addEventListener("click", async (e) => {
     case "repeat": case "repeat-set": S.repeat = a === "repeat" ? { off: "all", all: "one", one: "off" }[S.repeat] : el.dataset.mode; savePrefs(); renderPlayer(); refreshQueue();
       if (a === "repeat") toast({ off: "Repeat off", all: "Repeating the list", one: "Repeating this song" }[S.repeat]); break;
     case "queue": queueSheet(); break;
+    case "viz": openViz(); break;
+    case "viz-close": closeViz(); break;
+    case "viz-mode": vizMode = (vizMode + 1) % VIZ_MODES.length; try { localStorage.setItem("earnies-viz-mode", VIZ_MODES[vizMode]); } catch { /* fine */ } vizRender(); break;
     case "q-next": case "q-add": {
       const b = beatById(id); if (!b) break;
       if (!P.src) { await playBeat(id); toast(`Playing ${b.title}`); break; }
