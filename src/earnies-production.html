@@ -794,7 +794,17 @@ const KEYS = [
   ["A min","8A"],["E min","9A"],["B min","10A"],["F# min","11A"],["C# min","12A"],["G# min","1A"],["Eb min","2A"],["Bb min","3A"],["F min","4A"],["C min","5A"],["G min","6A"],["D min","7A"],
 ];
 const camelot = (k) => (KEYS.find((x) => x[0] === k) || [, ""])[1];
-const GENRES = ["Boom bap", "Trap", "Lo-fi", "Afrobeats", "R&B", "House"];
+/* The first six keep their place so existing beats keep their colours. */
+const GENRE_GROUPS = [
+  ["Hip hop", ["Boom bap", "Trap", "Hip hop", "Drill", "UK drill", "Grime", "Plugg", "Pluggnb", "Rage", "Phonk", "Memphis", "Jersey club", "Detroit", "West Coast", "Old school", "Jazz rap", "Emo rap", "Cloud rap", "Lo-fi"]],
+  ["R&B and soul", ["R&B", "Soul", "Neo soul", "Funk", "Gospel", "Disco"]],
+  ["Pop", ["Pop", "K-pop", "Hyperpop", "Indie pop", "Synth pop", "Bedroom pop"]],
+  ["Afro, Latin and Caribbean", ["Afrobeats", "Amapiano", "Afro house", "Dancehall", "Reggae", "Reggaeton", "Latin trap", "Baile funk", "Moombahton"]],
+  ["Electronic", ["House", "Deep house", "Tech house", "Techno", "EDM", "Dubstep", "Drum & bass", "UK garage", "Future bass", "Trance", "Synthwave", "Ambient", "Breakbeat"]],
+  ["Rock and more", ["Rock", "Alternative", "Indie", "Pop punk", "Metal", "Country", "Folk", "Blues", "Jazz", "Classical", "Cinematic", "Video game", "Other"]],
+];
+const GENRES = ["Boom bap", "Trap", "Lo-fi", "Afrobeats", "R&B", "House", ...GENRE_GROUPS.flatMap(([, g]) => g).filter((g) => !["Boom bap", "Trap", "Lo-fi", "Afrobeats", "R&B", "House"].includes(g))];
+const genreOptions = (cur) => GENRE_GROUPS.map(([label, gs]) => `<optgroup label="${esc(label)}">${gs.map((g) => `<option${g === cur ? " selected" : ""}>${esc(g)}</option>`).join("")}</optgroup>`).join("");
 const STAGES = ["Writing", "Recording", "Mixing", "Mastering", "Released"];
 const STATUS = {
   active:  { label: "In session", color: "var(--water-ink)" },
@@ -1169,7 +1179,8 @@ function beatRow(b) {
 function viewBeats() {
   const list = visibleBeats();
   const total = libBeats().reduce((a, b) => a + (b.len || 0), 0);
-  const chips = ["All", ...GENRES].map((g) => `<button class="btn sm${S.genre === g ? " lit" : " quiet"}" data-act="genre" data-genre="${esc(g)}" aria-pressed="${S.genre === g}">${esc(g)}</button>`).join("");
+  const used = new Set(libBeats().map((b) => b.genre).filter(Boolean)), chipList = ["All", ...GENRES.filter((g) => used.has(g) || S.genre === g), ...[...used].filter((g) => !GENRES.includes(g))];
+  const chips = chipList.map((g) => `<button class="btn sm${S.genre === g ? " lit" : " quiet"}" data-act="genre" data-genre="${esc(g)}" aria-pressed="${S.genre === g}">${esc(g)}</button>`).join("");
   return `<section class="view">
     <div class="head">
       <div><div class="kicker">Library</div><h1>Beats</h1><p>${libBeats().length} ${libBeats().length === 1 ? "beat" : "beats"} · ${fmt(total)} of music</p></div>
@@ -1390,7 +1401,7 @@ function beatForm() {
         <label>Key<select class="field" id="f-key"><option value="">No key yet</option>${keyOpts}</select></label>
       </div>
       <div class="presets" role="group" aria-label="BPM presets">${[80, 90, 100, 120, 128, 140, 160].map((n) => `<button type="button" class="btn sm quiet" data-act="bpm" data-bpm="${n}">${n}</button>`).join("")}</div>
-      <label>Genre<select class="field" id="f-genre">${GENRES.map((g) => `<option>${esc(g)}</option>`).join("")}</select></label>
+      <label>Genre<select class="field" id="f-genre">${genreOptions("Boom bap")}</select></label>
       <p class="err" id="f-err" hidden></p>
       <div class="form-actions"><button type="button" class="btn quiet" data-act="close">Cancel</button><button class="btn primary" type="submit">${ic("plus")}Save beat</button></div>
     </form>`);
@@ -1517,6 +1528,7 @@ function beatMenu(id) {
     <div class="form">
       <div class="art-row"><button type="button" class="art-tile" data-act="art" data-kind="song" data-id="${b.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} cover art">${artOf(b.id) ? `<img src="${artOf(b.id)}" alt="">` : ic("image")}</button>
         <div style="display:grid;gap:8px"><div class="kicker">Cover art</div><div class="acts"><button type="button" class="btn sm" data-act="art" data-kind="song" data-id="${b.id}">${ic("image")}${artOf(b.id) ? "Change art" : "Add cover art"}</button></div></div></div>
+      <label><span class="kicker">Genre</span><select class="field" data-genre-of="${b.id}">${genreOptions(b.genre)}</select></label>
       <div style="display:grid;gap:8px"><div class="kicker">Given or used?</div><div class="use-seg" role="group" aria-label="Given or used">${Object.entries(USE).map(([k, l]) => `<button type="button" class="btn sm${useOf(b) === k ? " lit" : " quiet"}" data-act="use-set" data-use="${k}" data-id="${b.id}" aria-pressed="${useOf(b) === k}">${l}</button>`).join("")}</div>
         <input class="field" data-use-note="${b.id}" value="${esc(b.useNote || "")}" placeholder="Who got it, or which song it's on" autocomplete="off" aria-label="Who got it, or which song it's on"></div>
       <div style="display:grid;gap:8px"><div class="kicker">Queue</div><div class="acts"><button type="button" class="btn sm" data-act="q-next" data-id="${b.id}">${ic("queue")}Play next</button><button type="button" class="btn sm" data-act="q-add" data-id="${b.id}">${ic("queueAdd")}Add to queue</button></div></div>
@@ -1954,6 +1966,8 @@ function refreshModal() {
   if (modal.querySelector(".detail") && S.collab) openCollabModal(S.collab);
 }
 
+document.addEventListener("change", (e) => { const gid = e.target.dataset?.genreOf; if (!gid) return; const b = beatById(gid); if (!b) return;
+  b.genre = e.target.value; persist(); renderAll(); toast(`Genre set to ${b.genre}`); });
 document.addEventListener("change", (e) => { const id = e.target.dataset?.useNote; if (!id) return; const b = beatById(id); if (!b) return;
   b.useNote = e.target.value.trim(); if (b.useNote && useOf(b) === "none") b.use = "given"; persist(); renderMain(); toast("Saved"); });
 document.addEventListener("input", (e) => { if (e.target.id === "q") { S.query = e.target.value; renderMain(); } });
