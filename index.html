@@ -395,6 +395,22 @@ h2.sub { margin: 4px 0 12px; }
 .q-hint { margin: 0; color: var(--ink-soft); font-size: 13.5px; }
 .mini.now-row { box-shadow: 0 0 0 1px var(--hairline); border-radius: 18px; }
 
+/* ------------------------------------------------------ used / given tag */
+.use-pill { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 9px; border-radius: 999px; flex: none;
+  font: 700 11px/1 var(--f-ui); letter-spacing: .02em; color: var(--ink); background: rgba(255,255,255,.85); box-shadow: 0 0 0 1px var(--hairline), 0 2px 6px -3px rgba(var(--shadow),.3);
+  cursor: pointer; transition: transform .2s cubic-bezier(.34,1.56,.64,1), background .2s; white-space: nowrap; }
+.use-pill:hover { transform: translateY(-1px); }
+.use-pill:active { transform: scale(.94); }
+.use-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--uc); }
+.use-pill.use-none { --uc: var(--water-ink); }
+.use-pill.use-given { --uc: var(--sky-ink); background: color-mix(in srgb, var(--sky) 45%, #fff); }
+.use-pill.use-used { --uc: var(--peach-ink); background: color-mix(in srgb, var(--peach) 50%, #fff); }
+.use-pill .who { font-weight: 600; color: var(--ink-soft); max-width: 90px; overflow: hidden; text-overflow: ellipsis; }
+.beat-title small { overflow: visible; }
+.beat-title small .g { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+@media (max-width: 860px) { .beat-title small .g { display: none; } .use-pill .who { max-width: 64px; } }
+.use-seg { display: flex; flex-wrap: wrap; gap: 6px; }
+
 /* ----------------------------------------------------------- visualizer */
 .player-art, .now { cursor: pointer; }
 .viz { position: fixed; inset: 0; z-index: 35; display: flex; flex-direction: column; background: var(--ivory); overflow: hidden;
@@ -802,6 +818,13 @@ const STATUS = {
   invited: { label: "Invited", color: "var(--sky-ink)" },
 };
 
+/* Has this beat been given away or used on a song yet? Tap the tag to change it. */
+const USE = { none: "Not used", given: "Given", used: "Used" };
+const USE_NEXT = { none: "given", given: "used", used: "none" };
+const useOf = (b) => (USE[b.use] ? b.use : "none");
+const useBtn = (b) => { const u = useOf(b); return `<button type="button" class="use-pill use-${u}" data-act="use" data-id="${b.id}" title="${b.useNote ? esc(b.useNote) + " · " : ""}Tap to change" aria-label="${USE[u]}${b.useNote ? ", " + esc(b.useNote) : ""}. Tap to change.">
+  <i></i>${USE[u]}${u !== "none" && b.useNote ? `<span class="who">· ${esc(b.useNote)}</span>` : ""}</button>`; };
+
 /* ----------------------------------------------------------- storage */
 const LS_KEY = "earnies-production-v1";
 const store = {
@@ -1139,7 +1162,7 @@ function renderTabs() {
 function visibleBeats() {
   const q = S.query.trim().toLowerCase();
   return libBeats().filter((b) => (q || here("beats", b)) && (S.genre === "All" || b.genre === S.genre) &&
-    (!q || [b.title, b.genre, b.key, String(b.bpm)].some((v) => String(v).toLowerCase().includes(q))));
+    (!q || [b.title, b.genre, b.key, String(b.bpm), USE[useOf(b)], b.useNote].some((v) => String(v).toLowerCase().includes(q))));
 }
 
 function beatRow(b) {
@@ -1150,7 +1173,7 @@ function beatRow(b) {
   const wave = peaks.map((p, i) => `<i class="${now && i / peaks.length <= pos ? "on" : ""}" style="height:${Math.round(p * 100)}%"></i>`).join("");
   return `<li class="beat glass${now ? " lit" : ""}" data-beat="${b.id}" style="--t1:${tint};--beat-ink:${ink}">
     <button class="btn icon primary play" data-act="play" data-id="${b.id}" aria-label="${on ? "Pause" : "Play"} ${esc(b.title)}" style="--t1:${tint}">${ic(on ? "pause" : "play")}</button>
-    <div class="beat-title has-thumb"><button type="button" class="song-art sm" data-act="art" data-kind="song" data-id="${b.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} cover art for ${esc(b.title)}">${artOf(b.id) ? `<img src="${artOf(b.id)}" alt="">` : ic("image")}</button><span class="bt"><b>${esc(b.title)}</b><small>${esc(b.genre)}${b.example ? ' <span class="example">Example</span>' : ""}</small></span></div>
+    <div class="beat-title has-thumb"><button type="button" class="song-art sm" data-act="art" data-kind="song" data-id="${b.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} cover art for ${esc(b.title)}">${artOf(b.id) ? `<img src="${artOf(b.id)}" alt="">` : ic("image")}</button><span class="bt"><b>${esc(b.title)}</b><small><span class="g">${esc(b.genre || "")}</span>${useBtn(b)}${b.example ? ' <span class="example">Example</span>' : ""}</small></span></div>
     <div class="wave" aria-hidden="true">${wave}</div>
     <div class="cell mono"><b>${b.bpm || "––"}</b> BPM</div>
     <div class="cell c-key">${b.key ? `<b>${esc(b.key)}</b> <span class="mono">${camelot(b.key)}</span>` : "No key"}</div>
@@ -1170,7 +1193,7 @@ function viewBeats() {
     </div>
     ${folderBar("beats")}
     <div class="toolbar">
-      <label class="search"><span class="sr">Search beats</span>${ic("search")}<input class="field" id="q" type="search" placeholder="Search title, key or BPM" value="${esc(S.query)}" autocomplete="off"></label>
+      <label class="search"><span class="sr">Search beats</span>${ic("search")}<input class="field" id="q" type="search" placeholder="Search title, key, BPM or used" value="${esc(S.query)}" autocomplete="off"></label>
       <div class="chips" role="group" aria-label="Filter by genre">${chips}</div>
     </div>
     ${list.length ? `<ul class="beats" style="list-style:none;margin:0;padding:0">${list.map(beatRow).join("")}</ul>` :
@@ -1278,6 +1301,7 @@ function songRow(b) {
     <button type="button" class="song-art" data-act="art" data-kind="song" data-id="${b.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} cover art for ${esc(b.title)}">${songArt(b) ? `<img src="${songArt(b)}" alt="">` : ic("image")}</button>
     <button class="btn icon primary" data-act="play" data-id="${b.id}" aria-label="${on ? "Pause" : "Play"} ${esc(b.title)}" style="--t1:${tint}">${ic(on ? "pause" : "play")}</button>
     <button type="button" class="song-text" data-act="open-song" data-id="${b.id}"><b>${esc(b.title)}</b><small>${esc(creditLine(b)) || "No splits yet"}</small></button>
+    ${useBtn(b)}
     <span class="mono song-len">${fmt(b.len)}</span>
     <button class="btn icon sm quiet" data-act="open-song" data-id="${b.id}" aria-label="Edit splits for ${esc(b.title)}">${ic("edit")}</button>
   </div>`;
@@ -1446,7 +1470,7 @@ function projectDetail(id) {
           ${tracks.length ? tracks.map((b, i) => { const on = S.nowId === b.id && S.playing; return `<div class="mini">
             <button type="button" class="song-art" data-act="art" data-kind="song" data-id="${b.id}" data-project="${p.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} art for ${esc(b.title)}">${songArt(b) ? `<img src="${songArt(b)}" alt="">` : ic("image")}</button>
             <button class="btn icon primary" data-act="play" data-id="${b.id}" aria-label="${on ? "Pause" : "Play"} ${esc(b.title)}" style="--t1:${beatTint(b)[0]}">${ic(on ? "pause" : "play")}</button>
-            <div class="grow"><b><span class="mono" style="color:var(--ink-mute)">${String(i + 1).padStart(2, "0")}</span>&nbsp; ${esc(b.title)}</b><small class="mono">${[b.project ? "Uploaded" : null, b.bpm ? `${b.bpm} BPM` : null, b.key ? `${esc(b.key)} ${camelot(b.key)}` : null, fmt(b.len)].filter(Boolean).join(" · ")}</small></div>
+            <div class="grow"><b><span class="mono" style="color:var(--ink-mute)">${String(i + 1).padStart(2, "0")}</span>&nbsp; ${esc(b.title)}</b><small class="mono">${[b.project ? "Uploaded" : null, b.bpm ? `${b.bpm} BPM` : null, b.key ? `${esc(b.key)} ${camelot(b.key)}` : null, fmt(b.len)].filter(Boolean).join(" · ")}</small><div style="margin-top:4px">${useBtn(b)}</div></div>
             <button class="btn icon sm quiet" data-act="q-add" data-id="${b.id}" aria-label="Add ${esc(b.title)} to the queue">${ic("queueAdd")}</button>
             <button class="btn icon sm quiet" data-act="untrack" data-id="${b.id}" data-project="${p.id}" aria-label="Remove ${esc(b.title)} from project">${ic("x")}</button></div>`; }).join("") :
             `<p style="margin:0;color:var(--ink-soft);font-size:14px">No tracks yet. Upload songs straight from your device, or add beats from your library.</p>`}
@@ -1509,6 +1533,8 @@ function beatMenu(id) {
     <div class="form">
       <div class="art-row"><button type="button" class="art-tile" data-act="art" data-kind="song" data-id="${b.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} cover art">${artOf(b.id) ? `<img src="${artOf(b.id)}" alt="">` : ic("image")}</button>
         <div style="display:grid;gap:8px"><div class="kicker">Cover art</div><div class="acts"><button type="button" class="btn sm" data-act="art" data-kind="song" data-id="${b.id}">${ic("image")}${artOf(b.id) ? "Change art" : "Add cover art"}</button></div></div></div>
+      <div style="display:grid;gap:8px"><div class="kicker">Given or used?</div><div class="use-seg" role="group" aria-label="Given or used">${Object.entries(USE).map(([k, l]) => `<button type="button" class="btn sm${useOf(b) === k ? " lit" : " quiet"}" data-act="use-set" data-use="${k}" data-id="${b.id}" aria-pressed="${useOf(b) === k}">${l}</button>`).join("")}</div>
+        <input class="field" data-use-note="${b.id}" value="${esc(b.useNote || "")}" placeholder="Who got it, or which song it's on" autocomplete="off" aria-label="Who got it, or which song it's on"></div>
       <div style="display:grid;gap:8px"><div class="kicker">Queue</div><div class="acts"><button type="button" class="btn sm" data-act="q-next" data-id="${b.id}">${ic("queue")}Play next</button><button type="button" class="btn sm" data-act="q-add" data-id="${b.id}">${ic("queueAdd")}Add to queue</button></div></div>
       ${foldersIn("beats").length ? `<label><span class="kicker">Folder</span>${folderSelect("beats", b.folder, "beat", b.id)}</label>` : `<p style="margin:0;color:var(--ink-soft);font-size:13.5px">Make a folder with the Folder button to sort your beats.</p>`}
       <div class="form-actions" style="justify-content:space-between"><button class="btn sm quiet danger" data-act="del-beat" data-id="${b.id}">${ic("trash")}Delete beat</button><button class="btn" data-act="close">Done</button></div>
@@ -1592,6 +1618,8 @@ function songDetail(id) {
       <div class="art-row"><button type="button" class="art-tile" data-act="art" data-kind="song" data-id="${b.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} cover art">${artOf(b.id) ? `<img src="${artOf(b.id)}" alt="">` : ic("image")}</button>
         <div style="display:grid;gap:8px"><div class="kicker">Cover art</div><div class="acts"><button type="button" class="btn sm" data-act="art" data-kind="song" data-id="${b.id}">${ic("image")}${artOf(b.id) ? "Change art" : "Add cover art"}</button><button type="button" class="btn sm primary" data-act="play" data-id="${b.id}" style="--t1:var(--water)">${ic(on ? "pause" : "play")}${on ? "Pause" : "Play"}</button></div></div></div>
       <div style="display:grid;gap:8px"><div class="kicker">Queue</div><div class="acts"><button type="button" class="btn sm" data-act="q-next" data-id="${b.id}">${ic("queue")}Play next</button><button type="button" class="btn sm" data-act="q-add" data-id="${b.id}">${ic("queueAdd")}Add to queue</button></div></div>
+      <div style="display:grid;gap:8px"><div class="kicker">Given or used?</div><div class="use-seg" role="group" aria-label="Given or used">${Object.entries(USE).map(([k, l]) => `<button type="button" class="btn sm${useOf(b) === k ? " lit" : " quiet"}" data-act="use-set" data-use="${k}" data-id="${b.id}" aria-pressed="${useOf(b) === k}">${l}</button>`).join("")}</div>
+        <input class="field" data-use-note="${b.id}" value="${esc(b.useNote || "")}" placeholder="Who got it, or which song it's on" autocomplete="off" aria-label="Who got it, or which song it's on"></div>
       <label>Title<input class="field" id="f-title" value="${esc(b.title)}" autocomplete="off" required></label>
       ${creditsEditor(b.credits?.length ? b.credits : [[ME, 100]])}
       ${foldersIn("collaborations").length ? `<label><span class="kicker">Folder</span>${folderSelect("collaborations", b.folder, "song", b.id)}</label>` : ""}
@@ -1820,6 +1848,11 @@ document.addEventListener("click", async (e) => {
       if (a === "repeat") toast({ off: "Repeat off", all: "Repeating the list", one: "Repeating this song" }[S.repeat]); break;
     case "queue": queueSheet(); break;
     case "viz": openViz(); break;
+    case "use": case "use-set": {
+      const b = beatById(id); if (!b) break;
+      b.use = a === "use" ? USE_NEXT[useOf(b)] : el.dataset.use; b.useAt = Date.now(); persist(); renderMain();
+      if (!scrim.hidden) { if (modal.querySelector('[data-form="song-edit"]')) { const keep = modal.querySelector("#f-title")?.value; songDetail(id); if (keep != null) modal.querySelector("#f-title").value = keep; } else if (modal.querySelector('[data-act="del-beat"]')) beatMenu(id); else refreshModal(); }
+      toast(`${b.title}: ${USE[useOf(b)]}`); break; }
     case "viz-close": closeViz(); break;
     case "viz-mode": vizMode = (vizMode + 1) % VIZ_MODES.length; try { localStorage.setItem("earnies-viz-mode", VIZ_MODES[vizMode]); } catch { /* fine */ } vizRender(); break;
     case "q-next": case "q-add": {
@@ -1937,6 +1970,8 @@ function refreshModal() {
   if (modal.querySelector(".detail") && S.collab) openCollabModal(S.collab);
 }
 
+document.addEventListener("change", (e) => { const id = e.target.dataset?.useNote; if (!id) return; const b = beatById(id); if (!b) return;
+  b.useNote = e.target.value.trim(); if (b.useNote && useOf(b) === "none") b.use = "given"; persist(); renderMain(); toast("Saved"); });
 document.addEventListener("input", (e) => { if (e.target.id === "q") { S.query = e.target.value; renderMain(); } });
 
 $("#file").addEventListener("change", (e) => { const f = e.target.files?.[0]; if (f) takeFile(f); e.target.value = ""; });
