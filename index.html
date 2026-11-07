@@ -383,6 +383,17 @@ h2.sub { margin: 4px 0 12px; }
 .track-knob { position: absolute; top: 50%; width: 16px; height: 16px; margin-left: -8px; transform: translateY(-50%); border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px var(--hairline), 0 2px 6px rgba(var(--shadow),.35); }
 .controls { display: flex; align-items: center; gap: 6px; }
 .controls .main { width: 50px; min-height: 50px; }
+.player { grid-template-columns: auto minmax(0, 200px) minmax(0, 1fr) auto auto; }
+.controls .mode.lit { color: var(--now-ink); --t1: var(--now-tint); }
+.pl-queue { position: relative; }
+.pl-queue .count { position: absolute; top: -3px; right: -3px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px; display: grid; place-items: center;
+  font: 600 10.5px/1 var(--f-mono, monospace); color: #fff; background: var(--now-ink, var(--ink)); box-shadow: 0 0 0 2px #fff; }
+.q-modes { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.55); box-shadow: 0 0 0 1px var(--hairline); }
+.seg .btn { min-height: 32px; padding: 0 12px; box-shadow: none; border-color: transparent; background: transparent; }
+.seg .btn.lit { color: var(--ink); }
+.q-hint { margin: 0; color: var(--ink-soft); font-size: 13.5px; }
+.mini.now-row { box-shadow: 0 0 0 1px var(--hairline); border-radius: 18px; }
 
 /* ---------------------------------------------------------------- modal */
 .scrim { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 20px max(16px, env(safe-area-inset-left, 0px)); background: rgba(247,246,242,.5); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: fade .2s ease; }
@@ -570,7 +581,8 @@ h2.sub { margin: 4px 0 12px; }
   .tabbar .tab svg { width: 20px; height: 20px; }
   .player { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px)); grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; padding: 8px 8px 8px 8px; border-radius: 22px; }
   .player .scrub { grid-column: 1 / -1; order: 3; grid-template-columns: 36px minmax(0, 1fr) 36px; }
-  .player .controls .side { display: none; }
+  .player .controls { grid-column: 1 / -1; order: 4; justify-content: space-evenly; gap: 4px; }
+  .player .pl-queue { order: 1; }
   .player-art { width: 44px; height: 44px; }
   .modal { align-self: end; border-radius: 28px 28px 22px 22px; padding: 20px; }
   .scrim { place-items: end center; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
@@ -661,10 +673,13 @@ h2.sub { margin: 4px 0 12px; }
     <span class="mono" id="pl-len">0:00</span>
   </div>
   <div class="controls">
+    <button class="btn icon sm quiet mode" data-act="shuffle" id="pl-shuffle" aria-label="Shuffle" aria-pressed="false"></button>
     <button class="btn icon sm side" data-act="prev" aria-label="Previous beat"></button>
     <button class="btn icon primary main" data-act="toggle" id="pl-toggle" aria-label="Play"></button>
     <button class="btn icon sm side" data-act="next" aria-label="Next beat"></button>
+    <button class="btn icon sm quiet mode" data-act="repeat" id="pl-repeat" aria-label="Repeat off"></button>
   </div>
+  <button class="btn icon sm quiet pl-queue" data-act="queue" id="pl-queue" aria-label="Up next"></button>
 </section>
 
 <div class="scrim" id="scrim" hidden><div class="modal glass dense" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"></div></div>
@@ -698,6 +713,11 @@ const I = {
   folder: '<path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/>',
   folderPlus: '<path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/><path d="M12 11v5M9.5 13.5h5"/>',
   edit: '<path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/>',
+  shuffle: '<path d="M3 7h3.5c2 0 3.2 1 4.3 2.7l2.4 4.6c1.1 1.7 2.3 2.7 4.3 2.7H21"/><path d="M3 17h3.5c1.4 0 2.4-.5 3.3-1.4M14.2 8.4c.9-.9 1.9-1.4 3.3-1.4H21"/><path d="m18 4 3 3-3 3M18 14l3 3-3 3"/>',
+  repeat: '<path d="M4 11V9a3 3 0 0 1 3-3h12"/><path d="m16 3 3 3-3 3"/><path d="M20 13v2a3 3 0 0 1-3 3H5"/><path d="m8 21-3-3 3-3"/>',
+  repeatOne: '<path d="M4 11V9a3 3 0 0 1 3-3h12"/><path d="m16 3 3 3-3 3"/><path d="M20 13v2a3 3 0 0 1-3 3H5"/><path d="m8 21-3-3 3-3"/><path d="M11 10.6 12.4 10v4.2" stroke-width="1.6"/>',
+  queue: '<path d="M4 6h11M4 12h11M4 18h7"/><path d="M16.5 14.5v6l4.5-3-4.5-3Z" fill="currentColor" stroke="none"/>',
+  queueAdd: '<path d="M4 6h11M4 12h8M4 18h7"/><path d="M18 11v8M14 15h8"/>',
   more: '<circle cx="5.5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="18.5" cy="12" r="1.3" fill="currentColor"/>',
 };
 const ic = (n) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
@@ -806,6 +826,13 @@ const S = {
   nowId: null,
   playing: false,
 };
+/* Player modes and the "up next" queue, kept per device apart from the library. */
+const PREF_KEY = "earnies-player-v1";
+const prefs = (() => { try { return JSON.parse(localStorage.getItem(PREF_KEY) || "null") || {}; } catch { return {}; } })();
+S.shuffle = !!prefs.shuffle;
+S.repeat = ["off", "all", "one"].includes(prefs.repeat) ? prefs.repeat : "off";
+S.queue = Array.isArray(prefs.queue) ? prefs.queue.filter((id) => S.beats.some((b) => b.id === id)) : [];
+const savePrefs = () => { try { localStorage.setItem(PREF_KEY, JSON.stringify({ shuffle: S.shuffle, repeat: S.repeat, queue: S.queue })); } catch { /* keep in memory */ } };
 const persist = () => store.save({ beats: S.beats, projects: S.projects, collabs: S.collabs, folders: S.folders });
 const uid = (p) => `${p}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -838,7 +865,7 @@ function seededWave(id, n = 48) {
 let ctx = null;
 const audioEl = new Audio();
 audioEl.preload = "metadata";
-const P = { src: null, startedAt: 0, offset: 0, timer: null, nextStep: 0, nextTime: 0, master: null, objUrl: null };
+const P = { history: [], played: new Set(), src: null, startedAt: 0, offset: 0, timer: null, nextStep: 0, nextTime: 0, master: null, objUrl: null };
 
 function ac() {
   if (!ctx) { const C = window.AudioContext || window.webkitAudioContext; ctx = new C(); }
@@ -906,11 +933,13 @@ function startSynth(at) {
   synthSchedule(); P.timer = setInterval(synthSchedule, 25);
 }
 
-async function playBeat(id) {
+async function playBeat(id, fromHistory) {
   const b = beatById(id); if (!b) return;
   if (S.nowId === id && P.src) { return resume(); }
   pause(true);
-  S.nowId = id;
+  if (S.nowId && !fromHistory) { P.history.push(S.nowId); if (P.history.length > 100) P.history.shift(); }
+  S.nowId = id; P.played.add(id);
+  if (!scrim.hidden && modal.querySelector('[data-sheet="queue"]')) setTimeout(queueSheet);
   if (b.source === "file") {
     const blob = await getBlob(b.id);
     if (!blob) { toast("This file isn't on this device any more. Upload it again to play it."); S.nowId = null; renderAll(); return; }
@@ -943,15 +972,97 @@ function seek(ratio) {
   else if (S.playing) startSynth(t); else P.offset = t;
   tick(true);
 }
-function step(dir) {
+/* What plays after the current song: the project, collab list or library view it came from. */
+function contextList() {
   const cur = beatById(S.nowId), proj = cur?.project && S.projects.find((p) => p.id === cur.project);
-  const list = proj ? proj.beats.map(beatById).filter(Boolean) : cur?.area === "collab" ? collabSongs() : visibleBeats().length ? visibleBeats() : libBeats();
-  if (!list.length) return;
-  const i = list.findIndex((b) => b.id === S.nowId);
-  const next = list[(i + dir + list.length) % list.length];
-  playBeat(next.id);
+  return proj ? proj.beats.map(beatById).filter(Boolean) : cur?.area === "collab" ? collabSongs() : visibleBeats().length ? visibleBeats() : libBeats();
 }
-audioEl.addEventListener("ended", () => step(1));
+function contextName() {
+  const cur = beatById(S.nowId), proj = cur?.project && S.projects.find((p) => p.id === cur.project);
+  return proj ? proj.title : cur?.area === "collab" ? "Collaborations" : S.open.beats ? folderById(S.open.beats)?.name || "Beats" : "Beats";
+}
+/* The next song without playing it. `auto` means the last one ended on its own. */
+function nextId(auto, peek) {
+  S.queue = S.queue.filter(beatById);
+  if (S.queue.length) return peek ? S.queue[0] : S.queue.shift();
+  const list = contextList(); if (!list.length) return null;
+  if (S.shuffle) {
+    let pool = list.filter((b) => b.id !== S.nowId && !P.played.has(b.id));
+    if (!pool.length) {
+      if (auto && S.repeat === "off") return null;
+      if (!peek) { P.played.clear(); if (S.nowId) P.played.add(S.nowId); }
+      pool = list.filter((b) => b.id !== S.nowId); if (!pool.length) pool = list;
+    }
+    return peek ? null : pool[Math.floor(Math.random() * pool.length)].id;
+  }
+  const i = list.findIndex((b) => b.id === S.nowId);
+  if (i + 1 >= list.length && auto && S.repeat === "off") return null;
+  return list[(i + 1) % list.length].id;
+}
+function step(dir, auto) {
+  if (dir < 0) {
+    if (P.src && position() > 3) { seek(0); if (!S.playing) resume(); return; }
+    const back = P.history.pop();
+    if (back && beatById(back)) { playBeat(back, true); return; }
+    const list = contextList(); if (!list.length) return;
+    const i = list.findIndex((b) => b.id === S.nowId);
+    playBeat(list[(i - 1 + list.length) % list.length].id, true);
+    return;
+  }
+  if (auto && S.repeat === "one" && P.src) { seek(0); resume(); return; }
+  const id = nextId(auto); savePrefs();
+  if (!id) { pause(); seek(0); if (auto) toast("That was the last song. Turn on repeat to keep going."); return; }
+  playBeat(id);
+}
+audioEl.addEventListener("ended", () => step(1, true));
+/* Keep the app in step when the lock screen, AirPods or Control Center pause or play. */
+audioEl.addEventListener("pause", () => { if (P.src?.kind === "file" && S.playing && !audioEl.ended) { S.playing = false; renderAll(); } });
+audioEl.addEventListener("play", () => { if (P.src?.kind === "file" && !S.playing) { S.playing = true; renderAll(); } });
+
+/* ------------------------------------------------ lock screen controls */
+const MS = "mediaSession" in navigator ? navigator.mediaSession : null;
+const artData = new Map();   // art blob URL -> data URL, which iOS shows on the lock screen
+let msKey = "";
+function artFor(url) {
+  if (!url) return Promise.resolve("");
+  if (artData.has(url)) return Promise.resolve(artData.get(url));
+  return fetch(url).then((r) => r.blob()).then((blob) => new Promise((res) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => res(""); fr.readAsDataURL(blob); }))
+    .then((d) => { artData.set(url, d); return d; }).catch(() => "");
+}
+function msPosition() {
+  if (!MS?.setPositionState || !P.src) return;
+  const d = duration(), p = position();
+  if (!isFinite(d) || d <= 0) return;
+  try { MS.setPositionState({ duration: d, playbackRate: 1, position: Math.max(0, Math.min(d, p)) }); } catch { /* older iOS */ }
+}
+function updateMediaSession() {
+  if (!MS) return;
+  const b = P.src && beatById(S.nowId);
+  if (!b) { if (msKey) { MS.metadata = null; MS.playbackState = "none"; msKey = ""; } return; }
+  const proj = b.project && S.projects.find((p) => p.id === b.project);
+  const artist = proj?.artist || (b.area === "collab" ? (b.credits || []).map(([who]) => who).join(", ") : "") || "Earnies Production";
+  const album = proj ? proj.title : b.area === "collab" ? "Collaborations" : [b.genre, b.bpm ? `${b.bpm} BPM` : "", b.key].filter(Boolean).join(" · ") || "Beats";
+  const art = songArt(b), key = [b.id, b.title, artist, album, art].join("|");
+  if (key !== msKey) {
+    msKey = key;
+    const icon = [{ src: new URL("icons/icon-512.png", location.href).href, sizes: "512x512", type: "image/png" }];
+    const set = (artwork) => { if (msKey !== key) return; try { MS.metadata = new MediaMetadata({ title: b.title, artist, album, artwork }); } catch { /* no MediaMetadata */ } };
+    set(icon);
+    if (art) artFor(art).then((d) => d && set([{ src: d, sizes: "512x512" }]));
+  }
+  MS.playbackState = S.playing ? "playing" : "paused";
+  msPosition();
+}
+if (MS) {
+  const on = (a, f) => { try { MS.setActionHandler(a, f); } catch { /* action not supported */ } };
+  on("play", () => resume());
+  on("pause", () => pause());
+  on("stop", () => pause());
+  on("previoustrack", () => step(-1));
+  on("nexttrack", () => step(1));
+  on("seekto", (d) => { if (P.src && d.seekTime != null && duration()) { seek(d.seekTime / duration()); msPosition(); } });
+  ["loadedmetadata", "seeked", "durationchange"].forEach((ev) => audioEl.addEventListener(ev, msPosition));
+}
 
 /* ------------------------------------------------------------ render */
 const $ = (sel) => document.querySelector(sel);
@@ -1144,7 +1255,8 @@ function renderPlayer() {
   const el = $("#player");
   const b = P.src && beatById(S.nowId);
   el.hidden = !b;
-  document.documentElement.style.setProperty("--player-h", b ? (matchMedia("(max-width:720px)").matches ? "116px" : "86px") : "0px");
+  updateMediaSession();
+  document.documentElement.style.setProperty("--player-h", b ? (matchMedia("(max-width:720px)").matches ? "160px" : "86px") : "0px");
   if (!b) return;
   const [tint, ink] = beatTint(b);
   el.style.setProperty("--now-tint", tint); el.style.setProperty("--now-ink", ink); el.style.setProperty("--t1", tint);
@@ -1155,6 +1267,10 @@ function renderPlayer() {
   const t = $("#pl-toggle"); t.innerHTML = ic(S.playing ? "pause" : "play"); t.setAttribute("aria-label", S.playing ? "Pause" : "Play");
   el.querySelector('[data-act="prev"]').innerHTML = ic("prev");
   el.querySelector('[data-act="next"]').innerHTML = ic("next");
+  const sh = $("#pl-shuffle"); sh.innerHTML = ic("shuffle"); sh.classList.toggle("lit", S.shuffle); sh.setAttribute("aria-pressed", S.shuffle); sh.setAttribute("aria-label", S.shuffle ? "Shuffle on" : "Shuffle off");
+  const rp = $("#pl-repeat"); rp.innerHTML = ic(S.repeat === "one" ? "repeatOne" : "repeat"); rp.classList.toggle("lit", S.repeat !== "off"); rp.setAttribute("aria-label", { off: "Repeat off", all: "Repeat all", one: "Repeat this song" }[S.repeat]);
+  const qn = S.queue.filter(beatById).length; $("#pl-queue").innerHTML = ic("queue") + (qn ? `<span class="count">${qn}</span>` : "");
+  $("#pl-queue").setAttribute("aria-label", qn ? `Up next, ${qn} queued` : "Up next");
   tick(true);
 }
 
@@ -1164,7 +1280,7 @@ let lastBucket = -1;
 function tick(force) {
   if (!P.src) return;
   const d = duration(), p = position();
-  if (P.src.kind === "synth" && S.playing && p >= d) { step(1); return; }
+  if (P.src.kind === "synth" && S.playing && p >= d) { step(1, true); return; }
   const r = d ? Math.min(1, p / d) : 0;
   $("#pl-fill").style.width = `${r * 100}%`;
   $("#pl-knob").style.left = `${r * 100}%`;
@@ -1271,6 +1387,7 @@ function projectDetail(id) {
             <button type="button" class="song-art" data-act="art" data-kind="song" data-id="${b.id}" data-project="${p.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} art for ${esc(b.title)}">${songArt(b) ? `<img src="${songArt(b)}" alt="">` : ic("image")}</button>
             <button class="btn icon primary" data-act="play" data-id="${b.id}" aria-label="${on ? "Pause" : "Play"} ${esc(b.title)}" style="--t1:${beatTint(b)[0]}">${ic(on ? "pause" : "play")}</button>
             <div class="grow"><b><span class="mono" style="color:var(--ink-mute)">${String(i + 1).padStart(2, "0")}</span>&nbsp; ${esc(b.title)}</b><small class="mono">${[b.project ? "Uploaded" : null, b.bpm ? `${b.bpm} BPM` : null, b.key ? `${esc(b.key)} ${camelot(b.key)}` : null, fmt(b.len)].filter(Boolean).join(" · ")}</small></div>
+            <button class="btn icon sm quiet" data-act="q-add" data-id="${b.id}" aria-label="Add ${esc(b.title)} to the queue">${ic("queueAdd")}</button>
             <button class="btn icon sm quiet" data-act="untrack" data-id="${b.id}" data-project="${p.id}" aria-label="Remove ${esc(b.title)} from project">${ic("x")}</button></div>`; }).join("") :
             `<p style="margin:0;color:var(--ink-soft);font-size:14px">No tracks yet. Upload songs straight from your device, or add beats from your library.</p>`}
           ${tracks.length ? `<p style="margin:0;color:var(--ink-mute);font-size:12.5px">Tap a song's picture square to give it its own single art.</p>` : ""}
@@ -1332,6 +1449,7 @@ function beatMenu(id) {
     <div class="form">
       <div class="art-row"><button type="button" class="art-tile" data-act="art" data-kind="song" data-id="${b.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} cover art">${artOf(b.id) ? `<img src="${artOf(b.id)}" alt="">` : ic("image")}</button>
         <div style="display:grid;gap:8px"><div class="kicker">Cover art</div><div class="acts"><button type="button" class="btn sm" data-act="art" data-kind="song" data-id="${b.id}">${ic("image")}${artOf(b.id) ? "Change art" : "Add cover art"}</button></div></div></div>
+      <div style="display:grid;gap:8px"><div class="kicker">Queue</div><div class="acts"><button type="button" class="btn sm" data-act="q-next" data-id="${b.id}">${ic("queue")}Play next</button><button type="button" class="btn sm" data-act="q-add" data-id="${b.id}">${ic("queueAdd")}Add to queue</button></div></div>
       ${foldersIn("beats").length ? `<label><span class="kicker">Folder</span>${folderSelect("beats", b.folder, "beat", b.id)}</label>` : `<p style="margin:0;color:var(--ink-soft);font-size:13.5px">Make a folder with the Folder button to sort your beats.</p>`}
       <div class="form-actions" style="justify-content:space-between"><button class="btn sm quiet danger" data-act="del-beat" data-id="${b.id}">${ic("trash")}Delete beat</button><button class="btn" data-act="close">Done</button></div>
     </div>`);
@@ -1413,6 +1531,7 @@ function songDetail(id) {
     <form class="form" data-form="song-edit" data-id="${b.id}" novalidate>
       <div class="art-row"><button type="button" class="art-tile" data-act="art" data-kind="song" data-id="${b.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} cover art">${artOf(b.id) ? `<img src="${artOf(b.id)}" alt="">` : ic("image")}</button>
         <div style="display:grid;gap:8px"><div class="kicker">Cover art</div><div class="acts"><button type="button" class="btn sm" data-act="art" data-kind="song" data-id="${b.id}">${ic("image")}${artOf(b.id) ? "Change art" : "Add cover art"}</button><button type="button" class="btn sm primary" data-act="play" data-id="${b.id}" style="--t1:var(--water)">${ic(on ? "pause" : "play")}${on ? "Pause" : "Play"}</button></div></div></div>
+      <div style="display:grid;gap:8px"><div class="kicker">Queue</div><div class="acts"><button type="button" class="btn sm" data-act="q-next" data-id="${b.id}">${ic("queue")}Play next</button><button type="button" class="btn sm" data-act="q-add" data-id="${b.id}">${ic("queueAdd")}Add to queue</button></div></div>
       <label>Title<input class="field" id="f-title" value="${esc(b.title)}" autocomplete="off" required></label>
       ${creditsEditor(b.credits?.length ? b.credits : [[ME, 100]])}
       ${foldersIn("collaborations").length ? `<label><span class="kicker">Folder</span>${folderSelect("collaborations", b.folder, "song", b.id)}</label>` : ""}
@@ -1443,9 +1562,23 @@ document.addEventListener("click", async (e) => {
   if (el.dataset.tab) { e.preventDefault(); go(el.dataset.tab); return; }
   switch (a) {
     case "play": if (S.nowId === id && S.playing) pause(); else await playBeat(id); if (!scrim.hidden && modal.querySelector(`[data-id="${id}"]`)) refreshModal(); break;
-    case "toggle": S.playing ? pause() : resume(); break;
+    case "toggle": S.playing ? await Promise.resolve(pause()) : await resume(); refreshQueue(); break;
     case "prev": step(-1); break;
     case "next": step(1); break;
+    case "shuffle": S.shuffle = !S.shuffle; P.played.clear(); if (S.nowId) P.played.add(S.nowId); savePrefs(); renderPlayer(); refreshQueue(); toast(S.shuffle ? "Shuffle on" : "Shuffle off"); break;
+    case "repeat": case "repeat-set": S.repeat = a === "repeat" ? { off: "all", all: "one", one: "off" }[S.repeat] : el.dataset.mode; savePrefs(); renderPlayer(); refreshQueue();
+      if (a === "repeat") toast({ off: "Repeat off", all: "Repeating the list", one: "Repeating this song" }[S.repeat]); break;
+    case "queue": queueSheet(); break;
+    case "q-next": case "q-add": {
+      const b = beatById(id); if (!b) break;
+      if (!P.src) { await playBeat(id); toast(`Playing ${b.title}`); break; }
+      S.queue = S.queue.filter((x) => x !== id);
+      if (a === "q-next") S.queue.unshift(id); else S.queue.push(id);
+      savePrefs(); renderPlayer(); refreshQueue(); toast(a === "q-next" ? `${b.title} plays next` : `Added ${b.title} to the queue`); break; }
+    case "q-play": { const i = +el.dataset.idx, qid = S.queue[i]; S.queue.splice(i, 1); savePrefs(); await playBeat(qid); break; }
+    case "q-up": { const i = +el.dataset.idx; if (i > 0) { [S.queue[i - 1], S.queue[i]] = [S.queue[i], S.queue[i - 1]]; savePrefs(); renderPlayer(); queueSheet(); } break; }
+    case "q-del": S.queue.splice(+el.dataset.idx, 1); savePrefs(); renderPlayer(); queueSheet(); break;
+    case "q-clear": S.queue = []; savePrefs(); renderPlayer(); queueSheet(); break;
     case "genre": S.genre = el.dataset.genre; renderMain(); break;
     case "add-beat": beatForm(); break;
     case "pick-file": $("#file").click(); break;
@@ -1509,8 +1642,44 @@ document.addEventListener("click", async (e) => {
 
 function openCollabModal(id) { const c = S.collabs.find((x) => x.id === id); openModal(`<div style="display:flex;justify-content:flex-end;margin:-6px -6px 6px"><button class="btn icon sm" data-act="close" aria-label="Close">${ic("x")}</button></div>${collabDetail(c, "")}`, true);
   const d = modal.querySelector(".detail"); d.classList.remove("glass"); d.style.padding = "0"; }
+/* Up next: shuffle, repeat and the songs queued by hand, then the rest of the list. */
+function refreshQueue() { if (!scrim.hidden && modal.querySelector('[data-sheet="queue"]')) queueSheet(); }
+function queueSheet() {
+  const cur = P.src && beatById(S.nowId);
+  S.queue = S.queue.filter(beatById);
+  const meta = (b) => [b.bpm ? `${b.bpm} BPM` : null, b.key ? `${esc(b.key)} ${camelot(b.key)}` : null, fmt(b.len)].filter(Boolean).join(" · ");
+  const thumb = (b) => `<span class="song-art sm" aria-hidden="true">${songArt(b) ? `<img src="${songArt(b)}" alt="">` : ic("disc")}</span>`;
+  const queued = S.queue.map(beatById).map((b, i) => `<div class="mini">
+      ${thumb(b)}
+      <button class="btn icon sm primary" data-act="q-play" data-idx="${i}" aria-label="Play ${esc(b.title)} now" style="--t1:${beatTint(b)[0]}">${ic("play")}</button>
+      <div class="grow"><b>${esc(b.title)}</b><small class="mono">${meta(b)}</small></div>
+      ${i ? `<button class="btn icon sm quiet" data-act="q-up" data-idx="${i}" aria-label="Move ${esc(b.title)} up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 14 6-6 6 6"/></svg></button>` : ""}
+      <button class="btn icon sm quiet" data-act="q-del" data-idx="${i}" aria-label="Remove ${esc(b.title)} from the queue">${ic("x")}</button></div>`).join("");
+  let rest = "";
+  if (cur) {
+    const list = contextList(), i = list.findIndex((b) => b.id === S.nowId);
+    const after = S.shuffle ? [] : (S.repeat === "off" ? list.slice(i + 1) : list.slice(i + 1).concat(list.slice(0, Math.max(0, i)))).slice(0, 6);
+    rest = `<div style="display:grid;gap:8px"><div class="kicker">Then from ${esc(contextName())}</div>
+      ${S.shuffle ? `<p class="q-hint">Shuffle picks the rest of ${esc(contextName())} at random.</p>` :
+        after.length ? `<div class="mini-list">${after.map((b) => `<div class="mini">${thumb(b)}<button class="btn icon sm primary" data-act="play" data-id="${b.id}" aria-label="Play ${esc(b.title)}" style="--t1:${beatTint(b)[0]}">${ic("play")}</button><div class="grow"><b>${esc(b.title)}</b><small class="mono">${meta(b)}</small></div><button class="btn icon sm quiet" data-act="q-next" data-id="${b.id}" aria-label="Play ${esc(b.title)} next">${ic("queue")}</button></div>`).join("")}</div>` :
+        `<p class="q-hint">${S.repeat === "one" ? "Repeat is on for this song." : "This is the last song. Turn on Repeat all to start the list again."}</p>`}</div>`;
+  }
+  openModal(`${modalHead("Player", "Up next")}
+    <div class="form" data-sheet="queue">
+      <div class="q-modes">
+        <button class="btn sm${S.shuffle ? " lit" : ""}" data-act="shuffle" aria-pressed="${S.shuffle}">${ic("shuffle")}Shuffle ${S.shuffle ? "on" : "off"}</button>
+        <div class="seg" role="group" aria-label="Repeat">${[["off", "Repeat off"], ["all", "All"], ["one", "One"]].map(([m, l]) => `<button class="btn sm${S.repeat === m ? " lit" : ""}" data-act="repeat-set" data-mode="${m}" aria-pressed="${S.repeat === m}">${m === "off" ? ic("repeat") : m === "one" ? ic("repeatOne") : ""}${l}</button>`).join("")}</div>
+      </div>
+      ${cur ? `<div style="display:grid;gap:8px"><div class="kicker">Now playing</div><div class="mini now-row">${thumb(cur)}<button class="btn icon sm primary" data-act="toggle" aria-label="${S.playing ? "Pause" : "Play"}" style="--t1:${beatTint(cur)[0]}">${ic(S.playing ? "pause" : "play")}</button><div class="grow"><b>${esc(cur.title)}</b><small class="mono">${meta(cur)}</small></div></div></div>` : ""}
+      <div style="display:grid;gap:8px"><div style="display:flex;justify-content:space-between;align-items:center"><div class="kicker">Queued by you</div>${S.queue.length ? `<button class="btn sm quiet" data-act="q-clear">Clear</button>` : ""}</div>
+        ${S.queue.length ? `<div class="mini-list">${queued}</div>` : `<p class="q-hint">Nothing queued. Tap ••• on a beat, or open a song, and pick Play next or Add to queue.</p>`}</div>
+      ${rest}
+      <div class="form-actions"><button class="btn" data-act="close">Done</button></div>
+    </div>`);
+}
 function refreshModal() {
   if (scrim.hidden) return;
+  if (modal.querySelector('[data-sheet="queue"]')) { queueSheet(); return; }
   const pid = modal.querySelector('[data-act="stage"]')?.dataset.id; if (pid) { projectDetail(pid); return; }
   if (modal.querySelector(".detail") && S.collab) openCollabModal(S.collab);
 }
