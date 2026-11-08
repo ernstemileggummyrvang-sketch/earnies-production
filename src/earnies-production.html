@@ -369,6 +369,71 @@ h2.sub { margin: 4px 0 12px; }
 .track-knob { position: absolute; top: 50%; width: 16px; height: 16px; margin-left: -8px; transform: translateY(-50%); border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px var(--hairline), 0 2px 6px rgba(var(--shadow),.35); }
 .controls { display: flex; align-items: center; gap: 6px; }
 .controls .main { width: 50px; min-height: 50px; }
+.player { grid-template-columns: auto minmax(0, 200px) minmax(0, 1fr) auto auto; }
+.controls .mode.lit { color: var(--now-ink); --t1: var(--now-tint); }
+.pl-queue { position: relative; }
+.pl-queue .count { position: absolute; top: -3px; right: -3px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px; display: grid; place-items: center;
+  font: 600 10.5px/1 var(--f-mono, monospace); color: #fff; background: var(--now-ink, var(--ink)); box-shadow: 0 0 0 2px #fff; }
+.q-modes { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.55); box-shadow: 0 0 0 1px var(--hairline); }
+.seg .btn { min-height: 32px; padding: 0 12px; box-shadow: none; border-color: transparent; background: transparent; }
+.seg .btn.lit { color: var(--ink); }
+.q-hint { margin: 0; color: var(--ink-soft); font-size: 13.5px; }
+.mini.now-row { box-shadow: 0 0 0 1px var(--hairline); border-radius: 18px; }
+
+/* ------------------------------------------------------ used / given tag */
+.use-pill { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 9px; border-radius: 999px; flex: none;
+  font: 700 11px/1 var(--f-ui); letter-spacing: .02em; color: var(--ink); background: rgba(255,255,255,.85); box-shadow: 0 0 0 1px var(--hairline), 0 2px 6px -3px rgba(var(--shadow),.3);
+  cursor: pointer; transition: transform .2s cubic-bezier(.34,1.56,.64,1), background .2s; white-space: nowrap; }
+.use-pill:hover { transform: translateY(-1px); }
+.use-pill:active { transform: scale(.94); }
+.use-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--uc); }
+.use-pill.use-none { --uc: var(--water-ink); }
+.use-pill.use-given { --uc: var(--sky-ink); background: color-mix(in srgb, var(--sky) 45%, #fff); }
+.use-pill.use-used { --uc: var(--peach-ink); background: color-mix(in srgb, var(--peach) 50%, #fff); }
+.use-pill .who { font-weight: 600; color: var(--ink-soft); max-width: 90px; overflow: hidden; text-overflow: ellipsis; }
+.beat-title small { overflow: visible; }
+.beat-title small .g { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+@media (max-width: 860px) { .beat-title small .g { display: none; } .use-pill .who { max-width: 64px; } }
+.use-seg { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ----------------------------------------------------------- visualizer */
+.player-art, .now { cursor: pointer; }
+.viz { position: fixed; inset: 0; z-index: 35; display: flex; flex-direction: column; background: var(--ivory); overflow: hidden;
+  padding: max(14px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  animation: viz-in .45s cubic-bezier(.22,1,.36,1); }
+.viz[hidden] { display: none !important; }
+.viz.closing { animation: viz-out .28s ease forwards; }
+@keyframes viz-in { from { opacity: 0; transform: translateY(40px) scale(.98); } }
+@keyframes viz-out { to { opacity: 0; transform: translateY(40px) scale(.98); } }
+#viz-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.viz-top { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.viz-top .kicker { flex: 1; text-align: center; }
+.viz-stage { position: relative; flex: 1; display: grid; place-items: center; min-height: 0; }
+.viz-disc { --s: 1; width: min(46vw, 34vh, 260px); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; transform: scale(var(--s));
+  background: radial-gradient(circle at 30% 25%, #fff, rgba(255,255,255,.55) 45%, rgba(255,255,255,.25)), var(--now-tint, var(--peach));
+  background-size: cover; background-position: center;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.9), 0 0 0 10px rgba(255,255,255,.35), 0 30px 60px -20px rgba(var(--shadow),.45), inset 0 2px 6px #fff; }
+.viz-disc .vinyl { width: 78%; height: 78%; }
+.viz-disc .vinyl::after { width: 26%; height: 26%; box-shadow: 0 0 0 6px rgba(255,255,255,.9); }
+.viz-disc.has-art .vinyl { display: none; }
+.viz.mode-bars .viz-stage { place-items: start center; padding-top: 2vh; }
+.viz.mode-bars .viz-disc { width: min(34vw, 24vh, 190px); }
+.viz-disc.spin { animation: spin 9s linear infinite; }
+.viz-disc.has-art.spin { animation-duration: 14s; }
+.viz-info { position: relative; width: min(560px, 100%); margin: 0 auto; border-radius: 28px; padding: 16px 18px 14px; display: grid; gap: 10px; }
+.viz-title { text-align: center; min-width: 0; }
+.viz-title b { display: block; font: 600 clamp(22px, 5vw, 30px)/1.15 var(--f-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.viz-title small { color: var(--ink-soft); font-size: 13px; }
+.viz-prog { display: grid; grid-template-columns: 40px 1fr 40px; gap: 10px; align-items: center; font-size: 12px; color: var(--ink-soft); }
+.viz-prog span:last-child { text-align: right; }
+.viz-bar { position: relative; height: 26px; display: flex; align-items: center; cursor: pointer; touch-action: none; }
+.viz-bar::before { content: ""; position: absolute; left: 0; right: 0; height: 6px; border-radius: 999px; background: rgba(48,52,58,.08); }
+.viz-bar i { position: relative; height: 6px; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--peach), var(--sky), var(--water)); }
+.viz-ctrl { justify-content: center; gap: 12px; }
+.viz-ctrl .main { width: 60px; min-height: 60px; }
+.viz-ctrl .main svg { width: 22px; height: 22px; }
+html.viz-open { overflow: hidden; }
 
 /* ---------------------------------------------------------------- modal */
 .scrim { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 20px max(16px, env(safe-area-inset-left, 0px)); background: rgba(247,246,242,.5); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: fade .2s ease; }
@@ -556,7 +621,8 @@ h2.sub { margin: 4px 0 12px; }
   .tabbar .tab svg { width: 20px; height: 20px; }
   .player { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px)); grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; padding: 8px 8px 8px 8px; border-radius: 22px; }
   .player .scrub { grid-column: 1 / -1; order: 3; grid-template-columns: 36px minmax(0, 1fr) 36px; }
-  .player .controls .side { display: none; }
+  .player .controls { grid-column: 1 / -1; order: 4; justify-content: space-evenly; gap: 4px; }
+  .player .pl-queue { order: 1; }
   .player-art { width: 44px; height: 44px; }
   .modal { align-self: end; border-radius: 28px 28px 22px 22px; padding: 20px; }
   .scrim { place-items: end center; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
@@ -634,8 +700,8 @@ h2.sub { margin: 4px 0 12px; }
 <div class="tabbar"><nav class="tabs glass" id="tabs-bottom" aria-label="Sections"></nav></div>
 
 <section class="player glass dense" id="player" hidden aria-label="Audio player">
-  <div class="player-art lit" id="pl-art"><div class="vinyl"></div></div>
-  <div class="now"><b id="pl-title"></b><small id="pl-meta"></small></div>
+  <div class="player-art lit" id="pl-art" data-act="viz" role="button" tabindex="0" aria-label="Open visualizer"><div class="vinyl"></div></div>
+  <div class="now" data-act="viz" role="button" tabindex="0" aria-label="Open visualizer"><b id="pl-title"></b><small id="pl-meta"></small></div>
   <div class="scrub">
     <span class="mono" id="pl-time">0:00</span>
     <div class="track" id="pl-track" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
@@ -645,9 +711,33 @@ h2.sub { margin: 4px 0 12px; }
     <span class="mono" id="pl-len">0:00</span>
   </div>
   <div class="controls">
+    <button class="btn icon sm quiet mode" data-act="shuffle" id="pl-shuffle" aria-label="Shuffle" aria-pressed="false"></button>
     <button class="btn icon sm side" data-act="prev" aria-label="Previous beat"></button>
     <button class="btn icon primary main" data-act="toggle" id="pl-toggle" aria-label="Play"></button>
     <button class="btn icon sm side" data-act="next" aria-label="Next beat"></button>
+    <button class="btn icon sm quiet mode" data-act="repeat" id="pl-repeat" aria-label="Repeat off"></button>
+  </div>
+  <button class="btn icon sm quiet pl-queue" data-act="queue" id="pl-queue" aria-label="Up next"></button>
+</section>
+
+<section class="viz" id="viz" hidden role="dialog" aria-modal="true" aria-label="Visualizer">
+  <canvas id="viz-canvas" aria-hidden="true"></canvas>
+  <div class="viz-top">
+    <button class="btn icon sm" data-act="viz-close" aria-label="Close visualizer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    <div class="kicker">Now playing</div>
+    <button class="btn sm" data-act="viz-mode" id="viz-mode" aria-label="Change visualizer style">Halo</button>
+  </div>
+  <div class="viz-stage" id="viz-stage"><div class="viz-disc" id="viz-disc"><div class="vinyl"></div></div></div>
+  <div class="viz-info glass dense">
+    <div class="viz-title"><b id="viz-title"></b><small id="viz-meta"></small></div>
+    <div class="viz-prog"><span class="mono" id="viz-time">0:00</span><div class="viz-bar" id="viz-bar"><i id="viz-fill"></i></div><span class="mono" id="viz-len">0:00</span></div>
+    <div class="controls viz-ctrl">
+      <button class="btn icon sm quiet mode" data-act="shuffle" id="viz-shuffle" aria-label="Shuffle"></button>
+      <button class="btn icon side" data-act="prev" aria-label="Previous beat"></button>
+      <button class="btn icon primary main" data-act="toggle" id="viz-toggle" aria-label="Play"></button>
+      <button class="btn icon side" data-act="next" aria-label="Next beat"></button>
+      <button class="btn icon sm quiet mode" data-act="repeat" id="viz-repeat" aria-label="Repeat"></button>
+    </div>
   </div>
 </section>
 
@@ -682,6 +772,11 @@ const I = {
   folder: '<path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/>',
   folderPlus: '<path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/><path d="M12 11v5M9.5 13.5h5"/>',
   edit: '<path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/>',
+  shuffle: '<path d="M3 7h3.5c2 0 3.2 1 4.3 2.7l2.4 4.6c1.1 1.7 2.3 2.7 4.3 2.7H21"/><path d="M3 17h3.5c1.4 0 2.4-.5 3.3-1.4M14.2 8.4c.9-.9 1.9-1.4 3.3-1.4H21"/><path d="m18 4 3 3-3 3M18 14l3 3-3 3"/>',
+  repeat: '<path d="M4 11V9a3 3 0 0 1 3-3h12"/><path d="m16 3 3 3-3 3"/><path d="M20 13v2a3 3 0 0 1-3 3H5"/><path d="m8 21-3-3 3-3"/>',
+  repeatOne: '<path d="M4 11V9a3 3 0 0 1 3-3h12"/><path d="m16 3 3 3-3 3"/><path d="M20 13v2a3 3 0 0 1-3 3H5"/><path d="m8 21-3-3 3-3"/><path d="M11 10.6 12.4 10v4.2" stroke-width="1.6"/>',
+  queue: '<path d="M4 6h11M4 12h11M4 18h7"/><path d="M16.5 14.5v6l4.5-3-4.5-3Z" fill="currentColor" stroke="none"/>',
+  queueAdd: '<path d="M4 6h11M4 12h8M4 18h7"/><path d="M18 11v8M14 15h8"/>',
   more: '<circle cx="5.5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="18.5" cy="12" r="1.3" fill="currentColor"/>',
 };
 const ic = (n) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
@@ -699,13 +794,30 @@ const KEYS = [
   ["A min","8A"],["E min","9A"],["B min","10A"],["F# min","11A"],["C# min","12A"],["G# min","1A"],["Eb min","2A"],["Bb min","3A"],["F min","4A"],["C min","5A"],["G min","6A"],["D min","7A"],
 ];
 const camelot = (k) => (KEYS.find((x) => x[0] === k) || [, ""])[1];
-const GENRES = ["Boom bap", "Trap", "Lo-fi", "Afrobeats", "R&B", "House"];
+/* The first six keep their place so existing beats keep their colours. */
+const GENRE_GROUPS = [
+  ["Hip hop", ["Boom bap", "Trap", "Hip hop", "Drill", "UK drill", "Grime", "Plugg", "Pluggnb", "Rage", "Phonk", "Memphis", "Jersey club", "Detroit", "West Coast", "Old school", "Jazz rap", "Emo rap", "Cloud rap", "Lo-fi"]],
+  ["R&B and soul", ["R&B", "Soul", "Neo soul", "Funk", "Gospel", "Disco"]],
+  ["Pop", ["Pop", "K-pop", "Hyperpop", "Indie pop", "Synth pop", "Bedroom pop"]],
+  ["Afro, Latin and Caribbean", ["Afrobeats", "Amapiano", "Afro house", "Dancehall", "Reggae", "Reggaeton", "Latin trap", "Baile funk", "Moombahton"]],
+  ["Electronic", ["House", "Deep house", "Tech house", "Techno", "EDM", "Dubstep", "Drum & bass", "UK garage", "Future bass", "Trance", "Synthwave", "Ambient", "Breakbeat"]],
+  ["Rock and more", ["Rock", "Alternative", "Indie", "Pop punk", "Metal", "Country", "Folk", "Blues", "Jazz", "Classical", "Cinematic", "Video game", "Other"]],
+];
+const GENRES = ["Boom bap", "Trap", "Lo-fi", "Afrobeats", "R&B", "House", ...GENRE_GROUPS.flatMap(([, g]) => g).filter((g) => !["Boom bap", "Trap", "Lo-fi", "Afrobeats", "R&B", "House"].includes(g))];
+const genreOptions = (cur) => GENRE_GROUPS.map(([label, gs]) => `<optgroup label="${esc(label)}">${gs.map((g) => `<option${g === cur ? " selected" : ""}>${esc(g)}</option>`).join("")}</optgroup>`).join("");
 const STAGES = ["Writing", "Recording", "Mixing", "Mastering", "Released"];
 const STATUS = {
   active:  { label: "In session", color: "var(--water-ink)" },
   waiting: { label: "Waiting on you", color: "var(--peach-ink)" },
   invited: { label: "Invited", color: "var(--sky-ink)" },
 };
+
+/* Has this beat been given away or used on a song yet? Tap the tag to change it. */
+const USE = { none: "Not used", given: "Given", used: "Used" };
+const USE_NEXT = { none: "given", given: "used", used: "none" };
+const useOf = (b) => (USE[b.use] ? b.use : "none");
+const useBtn = (b) => { const u = useOf(b); return `<button type="button" class="use-pill use-${u}" data-act="use" data-id="${b.id}" title="${b.useNote ? esc(b.useNote) + " · " : ""}Tap to change" aria-label="${USE[u]}${b.useNote ? ", " + esc(b.useNote) : ""}. Tap to change.">
+  <i></i>${USE[u]}${u !== "none" && b.useNote ? `<span class="who">· ${esc(b.useNote)}</span>` : ""}</button>`; };
 
 /* ----------------------------------------------------------- storage */
 const LS_KEY = "earnies-production-v1";
@@ -790,6 +902,13 @@ const S = {
   nowId: null,
   playing: false,
 };
+/* Player modes and the "up next" queue, kept per device apart from the library. */
+const PREF_KEY = "earnies-player-v1";
+const prefs = (() => { try { return JSON.parse(localStorage.getItem(PREF_KEY) || "null") || {}; } catch { return {}; } })();
+S.shuffle = !!prefs.shuffle;
+S.repeat = ["off", "all", "one"].includes(prefs.repeat) ? prefs.repeat : "off";
+S.queue = Array.isArray(prefs.queue) ? prefs.queue.filter((id) => S.beats.some((b) => b.id === id)) : [];
+const savePrefs = () => { try { localStorage.setItem(PREF_KEY, JSON.stringify({ shuffle: S.shuffle, repeat: S.repeat, queue: S.queue })); } catch { /* keep in memory */ } };
 const persist = () => store.save({ beats: S.beats, projects: S.projects, collabs: S.collabs, folders: S.folders });
 const uid = (p) => `${p}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -822,7 +941,7 @@ function seededWave(id, n = 48) {
 let ctx = null;
 const audioEl = new Audio();
 audioEl.preload = "metadata";
-const P = { src: null, startedAt: 0, offset: 0, timer: null, nextStep: 0, nextTime: 0, master: null, objUrl: null };
+const P = { history: [], played: new Set(), src: null, startedAt: 0, offset: 0, timer: null, nextStep: 0, nextTime: 0, master: null, objUrl: null };
 
 function ac() {
   if (!ctx) { const C = window.AudioContext || window.webkitAudioContext; ctx = new C(); }
@@ -890,11 +1009,13 @@ function startSynth(at) {
   synthSchedule(); P.timer = setInterval(synthSchedule, 25);
 }
 
-async function playBeat(id) {
+async function playBeat(id, fromHistory) {
   const b = beatById(id); if (!b) return;
   if (S.nowId === id && P.src) { return resume(); }
   pause(true);
-  S.nowId = id;
+  if (S.nowId && !fromHistory) { P.history.push(S.nowId); if (P.history.length > 100) P.history.shift(); }
+  S.nowId = id; P.played.add(id);
+  if (!scrim.hidden && modal.querySelector('[data-sheet="queue"]')) setTimeout(queueSheet);
   if (b.source === "file") {
     const blob = await getBlob(b.id);
     if (!blob) { toast("This file isn't on this device any more. Upload it again to play it."); S.nowId = null; renderAll(); return; }
@@ -927,15 +1048,97 @@ function seek(ratio) {
   else if (S.playing) startSynth(t); else P.offset = t;
   tick(true);
 }
-function step(dir) {
+/* What plays after the current song: the project, collab list or library view it came from. */
+function contextList() {
   const cur = beatById(S.nowId), proj = cur?.project && S.projects.find((p) => p.id === cur.project);
-  const list = proj ? proj.beats.map(beatById).filter(Boolean) : cur?.area === "collab" ? collabSongs() : visibleBeats().length ? visibleBeats() : libBeats();
-  if (!list.length) return;
-  const i = list.findIndex((b) => b.id === S.nowId);
-  const next = list[(i + dir + list.length) % list.length];
-  playBeat(next.id);
+  return proj ? proj.beats.map(beatById).filter(Boolean) : cur?.area === "collab" ? collabSongs() : visibleBeats().length ? visibleBeats() : libBeats();
 }
-audioEl.addEventListener("ended", () => step(1));
+function contextName() {
+  const cur = beatById(S.nowId), proj = cur?.project && S.projects.find((p) => p.id === cur.project);
+  return proj ? proj.title : cur?.area === "collab" ? "Collaborations" : S.open.beats ? folderById(S.open.beats)?.name || "Beats" : "Beats";
+}
+/* The next song without playing it. `auto` means the last one ended on its own. */
+function nextId(auto, peek) {
+  S.queue = S.queue.filter(beatById);
+  if (S.queue.length) return peek ? S.queue[0] : S.queue.shift();
+  const list = contextList(); if (!list.length) return null;
+  if (S.shuffle) {
+    let pool = list.filter((b) => b.id !== S.nowId && !P.played.has(b.id));
+    if (!pool.length) {
+      if (auto && S.repeat === "off") return null;
+      if (!peek) { P.played.clear(); if (S.nowId) P.played.add(S.nowId); }
+      pool = list.filter((b) => b.id !== S.nowId); if (!pool.length) pool = list;
+    }
+    return peek ? null : pool[Math.floor(Math.random() * pool.length)].id;
+  }
+  const i = list.findIndex((b) => b.id === S.nowId);
+  if (i + 1 >= list.length && auto && S.repeat === "off") return null;
+  return list[(i + 1) % list.length].id;
+}
+function step(dir, auto) {
+  if (dir < 0) {
+    if (P.src && position() > 3) { seek(0); if (!S.playing) resume(); return; }
+    const back = P.history.pop();
+    if (back && beatById(back)) { playBeat(back, true); return; }
+    const list = contextList(); if (!list.length) return;
+    const i = list.findIndex((b) => b.id === S.nowId);
+    playBeat(list[(i - 1 + list.length) % list.length].id, true);
+    return;
+  }
+  if (auto && S.repeat === "one" && P.src) { seek(0); resume(); return; }
+  const id = nextId(auto); savePrefs();
+  if (!id) { pause(); seek(0); if (auto) toast("That was the last song. Turn on repeat to keep going."); return; }
+  playBeat(id);
+}
+audioEl.addEventListener("ended", () => step(1, true));
+/* Keep the app in step when the lock screen, AirPods or Control Center pause or play. */
+audioEl.addEventListener("pause", () => { if (P.src?.kind === "file" && S.playing && !audioEl.ended) { S.playing = false; renderAll(); } });
+audioEl.addEventListener("play", () => { if (P.src?.kind === "file" && !S.playing) { S.playing = true; renderAll(); } });
+
+/* ------------------------------------------------ lock screen controls */
+const MS = "mediaSession" in navigator ? navigator.mediaSession : null;
+const artData = new Map();   // art blob URL -> data URL, which iOS shows on the lock screen
+let msKey = "";
+function artFor(url) {
+  if (!url) return Promise.resolve("");
+  if (artData.has(url)) return Promise.resolve(artData.get(url));
+  return fetch(url).then((r) => r.blob()).then((blob) => new Promise((res) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => res(""); fr.readAsDataURL(blob); }))
+    .then((d) => { artData.set(url, d); return d; }).catch(() => "");
+}
+function msPosition() {
+  if (!MS?.setPositionState || !P.src) return;
+  const d = duration(), p = position();
+  if (!isFinite(d) || d <= 0) return;
+  try { MS.setPositionState({ duration: d, playbackRate: 1, position: Math.max(0, Math.min(d, p)) }); } catch { /* older iOS */ }
+}
+function updateMediaSession() {
+  if (!MS) return;
+  const b = P.src && beatById(S.nowId);
+  if (!b) { if (msKey) { MS.metadata = null; MS.playbackState = "none"; msKey = ""; } return; }
+  const proj = b.project && S.projects.find((p) => p.id === b.project);
+  const artist = proj?.artist || (b.area === "collab" ? (b.credits || []).map(([who]) => who).join(", ") : "") || "Earnies Production";
+  const album = proj ? proj.title : b.area === "collab" ? "Collaborations" : [b.genre, b.bpm ? `${b.bpm} BPM` : "", b.key].filter(Boolean).join(" · ") || "Beats";
+  const art = songArt(b), key = [b.id, b.title, artist, album, art].join("|");
+  if (key !== msKey) {
+    msKey = key;
+    const icon = [{ src: new URL("icons/icon-512.png", location.href).href, sizes: "512x512", type: "image/png" }];
+    const set = (artwork) => { if (msKey !== key) return; try { MS.metadata = new MediaMetadata({ title: b.title, artist, album, artwork }); } catch { /* no MediaMetadata */ } };
+    set(icon);
+    if (art) artFor(art).then((d) => d && set([{ src: d, sizes: "512x512" }]));
+  }
+  MS.playbackState = S.playing ? "playing" : "paused";
+  msPosition();
+}
+if (MS) {
+  const on = (a, f) => { try { MS.setActionHandler(a, f); } catch { /* action not supported */ } };
+  on("play", () => resume());
+  on("pause", () => pause());
+  on("stop", () => pause());
+  on("previoustrack", () => step(-1));
+  on("nexttrack", () => step(1));
+  on("seekto", (d) => { if (P.src && d.seekTime != null && duration()) { seek(d.seekTime / duration()); msPosition(); } });
+  ["loadedmetadata", "seeked", "durationchange"].forEach((ev) => audioEl.addEventListener(ev, msPosition));
+}
 
 /* ------------------------------------------------------------ render */
 const $ = (sel) => document.querySelector(sel);
@@ -953,7 +1156,7 @@ function renderTabs() {
 function visibleBeats() {
   const q = S.query.trim().toLowerCase();
   return libBeats().filter((b) => (q || here("beats", b)) && (S.genre === "All" || b.genre === S.genre) &&
-    (!q || [b.title, b.genre, b.key, String(b.bpm)].some((v) => String(v).toLowerCase().includes(q))));
+    (!q || [b.title, b.genre, b.key, String(b.bpm), USE[useOf(b)], b.useNote].some((v) => String(v).toLowerCase().includes(q))));
 }
 
 function beatRow(b) {
@@ -964,7 +1167,7 @@ function beatRow(b) {
   const wave = peaks.map((p, i) => `<i class="${now && i / peaks.length <= pos ? "on" : ""}" style="height:${Math.round(p * 100)}%"></i>`).join("");
   return `<li class="beat glass${now ? " lit" : ""}" data-beat="${b.id}" style="--t1:${tint};--beat-ink:${ink}">
     <button class="btn icon primary play" data-act="play" data-id="${b.id}" aria-label="${on ? "Pause" : "Play"} ${esc(b.title)}" style="--t1:${tint}">${ic(on ? "pause" : "play")}</button>
-    <div class="beat-title has-thumb"><button type="button" class="song-art sm" data-act="art" data-kind="song" data-id="${b.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} cover art for ${esc(b.title)}">${artOf(b.id) ? `<img src="${artOf(b.id)}" alt="">` : ic("image")}</button><span class="bt"><b>${esc(b.title)}</b><small>${esc(b.genre)}${b.example ? ' <span class="example">Example</span>' : ""}</small></span></div>
+    <div class="beat-title has-thumb"><button type="button" class="song-art sm" data-act="art" data-kind="song" data-id="${b.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} cover art for ${esc(b.title)}">${artOf(b.id) ? `<img src="${artOf(b.id)}" alt="">` : ic("image")}</button><span class="bt"><b>${esc(b.title)}</b><small><span class="g">${esc(b.genre || "")}</span>${useBtn(b)}${b.example ? ' <span class="example">Example</span>' : ""}</small></span></div>
     <div class="wave" aria-hidden="true">${wave}</div>
     <div class="cell mono"><b>${b.bpm || "––"}</b> BPM</div>
     <div class="cell c-key">${b.key ? `<b>${esc(b.key)}</b> <span class="mono">${camelot(b.key)}</span>` : "No key"}</div>
@@ -976,7 +1179,8 @@ function beatRow(b) {
 function viewBeats() {
   const list = visibleBeats();
   const total = libBeats().reduce((a, b) => a + (b.len || 0), 0);
-  const chips = ["All", ...GENRES].map((g) => `<button class="btn sm${S.genre === g ? " lit" : " quiet"}" data-act="genre" data-genre="${esc(g)}" aria-pressed="${S.genre === g}">${esc(g)}</button>`).join("");
+  const used = new Set(libBeats().map((b) => b.genre).filter(Boolean)), chipList = ["All", ...GENRES.filter((g) => used.has(g) || S.genre === g), ...[...used].filter((g) => !GENRES.includes(g))];
+  const chips = chipList.map((g) => `<button class="btn sm${S.genre === g ? " lit" : " quiet"}" data-act="genre" data-genre="${esc(g)}" aria-pressed="${S.genre === g}">${esc(g)}</button>`).join("");
   return `<section class="view">
     <div class="head">
       <div><div class="kicker">Library</div><h1>Beats</h1><p>${libBeats().length} ${libBeats().length === 1 ? "beat" : "beats"} · ${fmt(total)} of music</p></div>
@@ -984,7 +1188,7 @@ function viewBeats() {
     </div>
     ${folderBar("beats")}
     <div class="toolbar">
-      <label class="search"><span class="sr">Search beats</span>${ic("search")}<input class="field" id="q" type="search" placeholder="Search title, key or BPM" value="${esc(S.query)}" autocomplete="off"></label>
+      <label class="search"><span class="sr">Search beats</span>${ic("search")}<input class="field" id="q" type="search" placeholder="Search title, key, BPM or used" value="${esc(S.query)}" autocomplete="off"></label>
       <div class="chips" role="group" aria-label="Filter by genre">${chips}</div>
     </div>
     ${list.length ? `<ul class="beats" style="list-style:none;margin:0;padding:0">${list.map(beatRow).join("")}</ul>` :
@@ -1092,6 +1296,7 @@ function songRow(b) {
     <button type="button" class="song-art" data-act="art" data-kind="song" data-id="${b.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} cover art for ${esc(b.title)}">${songArt(b) ? `<img src="${songArt(b)}" alt="">` : ic("image")}</button>
     <button class="btn icon primary" data-act="play" data-id="${b.id}" aria-label="${on ? "Pause" : "Play"} ${esc(b.title)}" style="--t1:${tint}">${ic(on ? "pause" : "play")}</button>
     <button type="button" class="song-text" data-act="open-song" data-id="${b.id}"><b>${esc(b.title)}</b><small>${esc(creditLine(b)) || "No splits yet"}</small></button>
+    ${useBtn(b)}
     <span class="mono song-len">${fmt(b.len)}</span>
     <button class="btn icon sm quiet" data-act="open-song" data-id="${b.id}" aria-label="Edit splits for ${esc(b.title)}">${ic("edit")}</button>
   </div>`;
@@ -1128,8 +1333,9 @@ function renderPlayer() {
   const el = $("#player");
   const b = P.src && beatById(S.nowId);
   el.hidden = !b;
-  document.documentElement.style.setProperty("--player-h", b ? (matchMedia("(max-width:720px)").matches ? "116px" : "86px") : "0px");
-  if (!b) return;
+  updateMediaSession();
+  document.documentElement.style.setProperty("--player-h", b ? (matchMedia("(max-width:720px)").matches ? "160px" : "86px") : "0px");
+  if (!b) { if (typeof closeViz === "function") closeViz(); return; }
   const [tint, ink] = beatTint(b);
   el.style.setProperty("--now-tint", tint); el.style.setProperty("--now-ink", ink); el.style.setProperty("--t1", tint);
   $("#pl-art").classList.toggle("spinning", S.playing);
@@ -1139,6 +1345,11 @@ function renderPlayer() {
   const t = $("#pl-toggle"); t.innerHTML = ic(S.playing ? "pause" : "play"); t.setAttribute("aria-label", S.playing ? "Pause" : "Play");
   el.querySelector('[data-act="prev"]').innerHTML = ic("prev");
   el.querySelector('[data-act="next"]').innerHTML = ic("next");
+  const sh = $("#pl-shuffle"); sh.innerHTML = ic("shuffle"); sh.classList.toggle("lit", S.shuffle); sh.setAttribute("aria-pressed", S.shuffle); sh.setAttribute("aria-label", S.shuffle ? "Shuffle on" : "Shuffle off");
+  const rp = $("#pl-repeat"); rp.innerHTML = ic(S.repeat === "one" ? "repeatOne" : "repeat"); rp.classList.toggle("lit", S.repeat !== "off"); rp.setAttribute("aria-label", { off: "Repeat off", all: "Repeat all", one: "Repeat this song" }[S.repeat]);
+  const qn = S.queue.filter(beatById).length; $("#pl-queue").innerHTML = ic("queue") + (qn ? `<span class="count">${qn}</span>` : "");
+  $("#pl-queue").setAttribute("aria-label", qn ? `Up next, ${qn} queued` : "Up next");
+  vizRender();
   tick(true);
 }
 
@@ -1148,7 +1359,7 @@ let lastBucket = -1;
 function tick(force) {
   if (!P.src) return;
   const d = duration(), p = position();
-  if (P.src.kind === "synth" && S.playing && p >= d) { step(1); return; }
+  if (P.src.kind === "synth" && S.playing && p >= d) { step(1, true); return; }
   const r = d ? Math.min(1, p / d) : 0;
   $("#pl-fill").style.width = `${r * 100}%`;
   $("#pl-knob").style.left = `${r * 100}%`;
@@ -1190,7 +1401,7 @@ function beatForm() {
         <label>Key<select class="field" id="f-key"><option value="">No key yet</option>${keyOpts}</select></label>
       </div>
       <div class="presets" role="group" aria-label="BPM presets">${[80, 90, 100, 120, 128, 140, 160].map((n) => `<button type="button" class="btn sm quiet" data-act="bpm" data-bpm="${n}">${n}</button>`).join("")}</div>
-      <label>Genre<select class="field" id="f-genre">${GENRES.map((g) => `<option>${esc(g)}</option>`).join("")}</select></label>
+      <label>Genre<select class="field" id="f-genre">${genreOptions("Boom bap")}</select></label>
       <p class="err" id="f-err" hidden></p>
       <div class="form-actions"><button type="button" class="btn quiet" data-act="close">Cancel</button><button class="btn primary" type="submit">${ic("plus")}Save beat</button></div>
     </form>`);
@@ -1254,7 +1465,8 @@ function projectDetail(id) {
           ${tracks.length ? tracks.map((b, i) => { const on = S.nowId === b.id && S.playing; return `<div class="mini">
             <button type="button" class="song-art" data-act="art" data-kind="song" data-id="${b.id}" data-project="${p.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} art for ${esc(b.title)}">${songArt(b) ? `<img src="${songArt(b)}" alt="">` : ic("image")}</button>
             <button class="btn icon primary" data-act="play" data-id="${b.id}" aria-label="${on ? "Pause" : "Play"} ${esc(b.title)}" style="--t1:${beatTint(b)[0]}">${ic(on ? "pause" : "play")}</button>
-            <div class="grow"><b><span class="mono" style="color:var(--ink-mute)">${String(i + 1).padStart(2, "0")}</span>&nbsp; ${esc(b.title)}</b><small class="mono">${[b.project ? "Uploaded" : null, b.bpm ? `${b.bpm} BPM` : null, b.key ? `${esc(b.key)} ${camelot(b.key)}` : null, fmt(b.len)].filter(Boolean).join(" · ")}</small></div>
+            <div class="grow"><b><span class="mono" style="color:var(--ink-mute)">${String(i + 1).padStart(2, "0")}</span>&nbsp; ${esc(b.title)}</b><small class="mono">${[b.project ? "Uploaded" : null, b.bpm ? `${b.bpm} BPM` : null, b.key ? `${esc(b.key)} ${camelot(b.key)}` : null, fmt(b.len)].filter(Boolean).join(" · ")}</small><div style="margin-top:4px">${useBtn(b)}</div></div>
+            <button class="btn icon sm quiet" data-act="q-add" data-id="${b.id}" aria-label="Add ${esc(b.title)} to the queue">${ic("queueAdd")}</button>
             <button class="btn icon sm quiet" data-act="untrack" data-id="${b.id}" data-project="${p.id}" aria-label="Remove ${esc(b.title)} from project">${ic("x")}</button></div>`; }).join("") :
             `<p style="margin:0;color:var(--ink-soft);font-size:14px">No tracks yet. Upload songs straight from your device, or add beats from your library.</p>`}
           ${tracks.length ? `<p style="margin:0;color:var(--ink-mute);font-size:12.5px">Tap a song's picture square to give it its own single art.</p>` : ""}
@@ -1316,6 +1528,10 @@ function beatMenu(id) {
     <div class="form">
       <div class="art-row"><button type="button" class="art-tile" data-act="art" data-kind="song" data-id="${b.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} cover art">${artOf(b.id) ? `<img src="${artOf(b.id)}" alt="">` : ic("image")}</button>
         <div style="display:grid;gap:8px"><div class="kicker">Cover art</div><div class="acts"><button type="button" class="btn sm" data-act="art" data-kind="song" data-id="${b.id}">${ic("image")}${artOf(b.id) ? "Change art" : "Add cover art"}</button></div></div></div>
+      <label><span class="kicker">Genre</span><select class="field" data-genre-of="${b.id}">${genreOptions(b.genre)}</select></label>
+      <div style="display:grid;gap:8px"><div class="kicker">Given or used?</div><div class="use-seg" role="group" aria-label="Given or used">${Object.entries(USE).map(([k, l]) => `<button type="button" class="btn sm${useOf(b) === k ? " lit" : " quiet"}" data-act="use-set" data-use="${k}" data-id="${b.id}" aria-pressed="${useOf(b) === k}">${l}</button>`).join("")}</div>
+        <input class="field" data-use-note="${b.id}" value="${esc(b.useNote || "")}" placeholder="Who got it, or which song it's on" autocomplete="off" aria-label="Who got it, or which song it's on"></div>
+      <div style="display:grid;gap:8px"><div class="kicker">Queue</div><div class="acts"><button type="button" class="btn sm" data-act="q-next" data-id="${b.id}">${ic("queue")}Play next</button><button type="button" class="btn sm" data-act="q-add" data-id="${b.id}">${ic("queueAdd")}Add to queue</button></div></div>
       ${foldersIn("beats").length ? `<label><span class="kicker">Folder</span>${folderSelect("beats", b.folder, "beat", b.id)}</label>` : `<p style="margin:0;color:var(--ink-soft);font-size:13.5px">Make a folder with the Folder button to sort your beats.</p>`}
       <div class="form-actions" style="justify-content:space-between"><button class="btn sm quiet danger" data-act="del-beat" data-id="${b.id}">${ic("trash")}Delete beat</button><button class="btn" data-act="close">Done</button></div>
     </div>`);
@@ -1397,6 +1613,9 @@ function songDetail(id) {
     <form class="form" data-form="song-edit" data-id="${b.id}" novalidate>
       <div class="art-row"><button type="button" class="art-tile" data-act="art" data-kind="song" data-id="${b.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} cover art">${artOf(b.id) ? `<img src="${artOf(b.id)}" alt="">` : ic("image")}</button>
         <div style="display:grid;gap:8px"><div class="kicker">Cover art</div><div class="acts"><button type="button" class="btn sm" data-act="art" data-kind="song" data-id="${b.id}">${ic("image")}${artOf(b.id) ? "Change art" : "Add cover art"}</button><button type="button" class="btn sm primary" data-act="play" data-id="${b.id}" style="--t1:var(--water)">${ic(on ? "pause" : "play")}${on ? "Pause" : "Play"}</button></div></div></div>
+      <div style="display:grid;gap:8px"><div class="kicker">Queue</div><div class="acts"><button type="button" class="btn sm" data-act="q-next" data-id="${b.id}">${ic("queue")}Play next</button><button type="button" class="btn sm" data-act="q-add" data-id="${b.id}">${ic("queueAdd")}Add to queue</button></div></div>
+      <div style="display:grid;gap:8px"><div class="kicker">Given or used?</div><div class="use-seg" role="group" aria-label="Given or used">${Object.entries(USE).map(([k, l]) => `<button type="button" class="btn sm${useOf(b) === k ? " lit" : " quiet"}" data-act="use-set" data-use="${k}" data-id="${b.id}" aria-pressed="${useOf(b) === k}">${l}</button>`).join("")}</div>
+        <input class="field" data-use-note="${b.id}" value="${esc(b.useNote || "")}" placeholder="Who got it, or which song it's on" autocomplete="off" aria-label="Who got it, or which song it's on"></div>
       <label>Title<input class="field" id="f-title" value="${esc(b.title)}" autocomplete="off" required></label>
       ${creditsEditor(b.credits?.length ? b.credits : [[ME, 100]])}
       ${foldersIn("collaborations").length ? `<label><span class="kicker">Folder</span>${folderSelect("collaborations", b.folder, "song", b.id)}</label>` : ""}
@@ -1405,6 +1624,196 @@ function songDetail(id) {
     </form>`);
   updateTotal();
 }
+
+/* ------------------------------------------------------- visualizer */
+/* Reads the decoded song next to the audio element instead of tapping it, so
+   playback keeps going in the background and on the lock screen. */
+const viz = $("#viz"), vizCv = $("#viz-canvas"), vizCx = vizCv.getContext("2d");
+const VIZ_MODES = ["Halo", "Bars", "Wave"];
+let vizMode = (() => { try { return Math.max(0, VIZ_MODES.indexOf(localStorage.getItem("earnies-viz-mode"))); } catch { return 0; } })();
+let vizRaf = 0, vizPcm = null, vizPcmId = null, vizLoading = null, vizT0 = 0;
+const FFT_N = 1024, BANDS = 64;
+const vizBands = new Float32Array(BANDS), vizWave = new Float32Array(128);
+let vizPeak = .5, vizBass = 0, vizEnergy = 0, vizSpin = 0, vizBubbles = [];
+const VIZ_COLS = [[233, 154, 106], [109, 179, 224], [77, 191, 175]];   // deeper peach, sky, water so they read on ivory
+const mixCol = (t, a = 1) => { t = ((t % 1) + 1) % 1; const f = t * 3, i = Math.floor(f) % 3, j = (i + 1) % 3, k = f - Math.floor(f); const c = VIZ_COLS[i].map((v, n) => Math.round(v + (VIZ_COLS[j][n] - v) * k)); return `rgba(${c[0]},${c[1]},${c[2]},${a})`; };
+
+async function vizLoad(b) {
+  if (!b || b.source !== "file") { vizPcm = null; vizPcmId = b?.id || null; return; }
+  if (vizPcmId === b.id && (vizPcm || vizLoading)) return;
+  vizPcmId = b.id; vizPcm = null;
+  const job = vizLoading = (async () => {
+    const blob = await getBlob(b.id); if (!blob) return null;
+    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    const buf = await new OAC(1, 1, 44100).decodeAudioData(await blob.arrayBuffer());
+    const step = buf.sampleRate > 30000 ? 2 : 1, len = Math.floor(buf.length / step), out = new Float32Array(len), chs = buf.numberOfChannels;
+    for (let c = 0; c < chs; c++) { const d = buf.getChannelData(c); for (let i = 0; i < len; i++) out[i] += d[i * step] / chs; }
+    return { data: out, rate: buf.sampleRate / step };
+  })().catch(() => null);
+  const res = await job;
+  if (vizLoading === job) { vizLoading = null; if (vizPcmId === b.id) vizPcm = res; }
+}
+
+/* In-place radix-2 FFT. */
+const fftRe = new Float32Array(FFT_N), fftIm = new Float32Array(FFT_N), hann = Float32Array.from({ length: FFT_N }, (_, i) => .5 - .5 * Math.cos((2 * Math.PI * i) / (FFT_N - 1)));
+function fft(re, im) {
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) { let bit = n >> 1; for (; j & bit; bit >>= 1) j ^= bit; j ^= bit; if (i < j) { [re[i], re[j]] = [re[j], re[i]]; [im[i], im[j]] = [im[j], im[i]]; } }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = (-2 * Math.PI) / len, wr = Math.cos(ang), wi = Math.sin(ang);
+    for (let i = 0; i < n; i += len) { let cr = 1, ci = 0;
+      for (let k = 0; k < len / 2; k++) { const a = i + k, b2 = a + len / 2, tr = re[b2] * cr - im[b2] * ci, ti = re[b2] * ci + im[b2] * cr;
+        re[b2] = re[a] - tr; im[b2] = im[a] - ti; re[a] += tr; im[a] += ti; const nr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = nr; } } }
+}
+function vizAnalyse(t) {
+  const on = S.playing;
+  if (vizPcm && on) {
+    const { data, rate } = vizPcm, start = Math.floor(position() * rate) - FFT_N / 2;
+    for (let i = 0; i < FFT_N; i++) { const v = data[start + i] || 0; fftRe[i] = v * hann[i]; fftIm[i] = 0; }
+    for (let i = 0; i < vizWave.length; i++) vizWave[i] = data[start + i * 8] || 0;
+    fft(fftRe, fftIm);
+    const binHz = rate / FFT_N, raw = new Float32Array(BANDS);
+    for (let b = 0; b < BANDS; b++) {
+      const lo = 32 * Math.pow(14000 / 32, b / BANDS), hi = 32 * Math.pow(14000 / 32, (b + 1) / BANDS);
+      let m = 0, n = 0; for (let k = Math.max(1, Math.floor(lo / binHz)); k <= Math.max(Math.floor(lo / binHz) + 1, Math.ceil(hi / binHz)) && k < FFT_N / 2; k++) { m += Math.hypot(fftRe[k], fftIm[k]); n++; }
+      const db = 20 * Math.log10((m / Math.max(1, n)) + 1e-6);
+      raw[b] = Math.max(0, (db + 48 + b * .1) / 56);
+    }
+    // auto gain, so quiet and loud masters both fill the screen without pinning at the top
+    let top = 0; for (let b = 0; b < BANDS; b++) top = Math.max(top, raw[b]);
+    vizPeak = Math.max(top, vizPeak * .996, .35);
+    for (let b = 0; b < BANDS; b++) { const v = Math.min(1, Math.pow(raw[b] / vizPeak, 1.6) * .95); vizBands[b] += (v - vizBands[b]) * (v > vizBands[b] ? .6 : .14); }
+  } else {
+    // synth beats, songs still decoding, or paused: a gentle groove from the clock
+    const beat = (t / 1000) * ((beatById(S.nowId)?.bpm || 90) / 60), ph = beat % 1, kick = on ? Math.exp(-ph * 6) : 0;
+    for (let b = 0; b < BANDS; b++) { const fr = b / BANDS, idle = .06 + .04 * Math.sin(t / 700 + b * .4);
+      const v = on ? Math.min(1, idle + kick * (1 - fr) * .8 + Math.random() * .15 * (1 - fr * .5)) : idle;
+      vizBands[b] += (v - vizBands[b]) * .12; }
+    for (let i = 0; i < vizWave.length; i++) vizWave[i] = on ? Math.sin(i / 6 + t / 120) * .25 * (.4 + kick) : 0;
+  }
+  let bass = 0, all = 0; for (let b = 0; b < BANDS; b++) { all += vizBands[b]; if (b < 9) bass += vizBands[b]; }
+  bass /= 9; all /= BANDS;
+  vizBass += (bass - vizBass) * (bass > vizBass ? .5 : .1); vizEnergy += (all - vizEnergy) * .15;
+}
+
+function vizSize() {
+  const dpr = Math.min(2, devicePixelRatio || 1), w = viz.clientWidth, h = viz.clientHeight;
+  if (vizCv.width !== Math.round(w * dpr) || vizCv.height !== Math.round(h * dpr)) { vizCv.width = Math.round(w * dpr); vizCv.height = Math.round(h * dpr); }
+  vizCx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [w, h];
+}
+function vizDraw(t) {
+  const [w, h] = vizSize(), c = vizCx, dt = Math.min(.05, (t - (vizT0 || t)) / 1000); vizT0 = t;
+  vizAnalyse(t);
+  const stage = $("#viz-stage").getBoundingClientRect(), vr = viz.getBoundingClientRect();
+  const cx = stage.left - vr.left + stage.width / 2, cy = stage.top - vr.top + stage.height / 2;
+  const disc = $("#viz-disc"), r0 = disc.offsetWidth / 2, pulse = 1 + vizBass * .09;
+  disc.style.setProperty("--s", pulse.toFixed(3));
+  vizSpin += dt * (.15 + vizEnergy * .6) * (S.playing ? 1 : .2);
+
+  // ivory base with drifting coloured light that swells on the kick
+  c.fillStyle = "#F7F6F2"; c.fillRect(0, 0, w, h);
+  const big = Math.max(w, h) * .8;
+  VIZ_COLS.forEach((col, i) => {
+    const a = vizSpin * .5 + i * 2.1, rr = big * (.42 + vizBass * .18 + i * .04);
+    const x = cx + Math.cos(a) * w * .28, y = cy + Math.sin(a * 1.3) * h * .22;
+    const g = c.createRadialGradient(x, y, 0, x, y, rr);
+    g.addColorStop(0, `rgba(${col[0]},${col[1]},${col[2]},${.16 + vizEnergy * .24})`); g.addColorStop(1, `rgba(${col[0]},${col[1]},${col[2]},0)`);
+    c.fillStyle = g; c.fillRect(0, 0, w, h);
+  });
+
+  // glass bubbles rising with the energy
+  if (vizBubbles.length < 26 && Math.random() < .08 + vizEnergy * .3) vizBubbles.push({ x: Math.random() * w, y: h + 20, r: 3 + Math.random() * 12, v: 20 + Math.random() * 40, ph: Math.random() * 6 });
+  vizBubbles = vizBubbles.filter((b) => b.y > -30);
+  vizBubbles.forEach((b) => { b.y -= b.v * dt * (1 + vizEnergy * 3); b.x += Math.sin(t / 900 + b.ph) * .3;
+    const g = c.createRadialGradient(b.x - b.r * .35, b.y - b.r * .35, 0, b.x, b.y, b.r);
+    g.addColorStop(0, "rgba(255,255,255,.95)"); g.addColorStop(.7, "rgba(255,255,255,.25)"); g.addColorStop(1, "rgba(255,255,255,.6)");
+    c.fillStyle = g; c.beginPath(); c.arc(b.x, b.y, b.r, 0, Math.PI * 2); c.fill(); });
+
+  c.lineCap = "round";
+  const mode = VIZ_MODES[vizMode], room = Math.min(stage.width, stage.height) / 2 - r0 * pulse;
+  if (mode === "Halo") {
+    const n = BANDS * 2, base = r0 * pulse + 14, maxL = Math.max(24, room - 10);
+    // soft glow ring
+    const gl = c.createRadialGradient(cx, cy, base - 10, cx, cy, base + maxL * (.4 + vizBass * .6));
+    gl.addColorStop(0, `rgba(255,255,255,${.5 + vizBass * .4})`); gl.addColorStop(1, "rgba(255,255,255,0)");
+    c.fillStyle = gl; c.beginPath(); c.arc(cx, cy, base + maxL, 0, Math.PI * 2); c.fill();
+    c.lineWidth = Math.max(2.5, (Math.PI * 2 * base) / n * .55);
+    for (let i = 0; i < n; i++) {
+      const bi = i < BANDS ? i : n - 1 - i, v = vizBands[bi], a = (i / n) * Math.PI * 2 - Math.PI / 2 + vizSpin * .25;
+      const L = 4 + v * maxL, x1 = cx + Math.cos(a) * base, y1 = cy + Math.sin(a) * base, x2 = cx + Math.cos(a) * (base + L), y2 = cy + Math.sin(a) * (base + L);
+      c.strokeStyle = mixCol(i / n + vizSpin * .05, .55 + v * .45); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+    }
+  } else if (mode === "Bars") {
+    const n = w < 700 ? 24 : 48, gap = w < 700 ? 5 : 6, bw = Math.min(16, (w - 32) / (n * 2) - gap), total = n * 2 * (bw + gap) - gap, x0 = (w - total) / 2;
+    const floor = stage.bottom - vr.top - stage.height * .14, maxH = Math.max(40, floor - (disc.getBoundingClientRect().bottom - vr.top) - 24);
+    const band = (k) => { const f = (k / n) * (BANDS - 1), i = Math.floor(f), m = f - i; return vizBands[i] * (1 - m) + (vizBands[i + 1] ?? vizBands[i]) * m; };
+    for (let i = 0; i < n * 2; i++) {
+      const v = band(i < n ? n - 1 - i : i - n), hgt = 6 + v * maxH, x = x0 + i * (bw + gap);
+      const g = c.createLinearGradient(0, floor - hgt, 0, floor);
+      g.addColorStop(0, mixCol(i / (n * 2), .95)); g.addColorStop(1, mixCol(i / (n * 2) + .3, .6));
+      c.fillStyle = g; c.beginPath(); c.roundRect ? c.roundRect(x, floor - hgt, bw, hgt, bw / 2) : c.rect(x, floor - hgt, bw, hgt); c.fill();
+      c.fillStyle = mixCol(i / (n * 2), .14); c.beginPath(); c.roundRect ? c.roundRect(x, floor + 6, bw, hgt * .3, bw / 2) : c.rect(x, floor + 6, bw, hgt * .3); c.fill();
+    }
+  } else {
+    for (let ring = 0; ring < 3; ring++) {
+      const base = r0 * pulse + 18 + ring * 16, amp = Math.max(18, room * .6) * (1 - ring * .25);
+      c.lineWidth = 3 - ring * .6; c.strokeStyle = mixCol(ring / 3 + vizSpin * .1, .85 - ring * .2); c.beginPath();
+      for (let i = 0; i <= vizWave.length; i++) {
+        const k = i % vizWave.length, a = (i / vizWave.length) * Math.PI * 2 + vizSpin * (ring % 2 ? -.3 : .3);
+        const rr = base + vizWave[k] * amp * (1 + vizBass) + vizBands[(k + ring * 7) % BANDS] * 10;
+        const x = cx + Math.cos(a) * rr, y = cy + Math.sin(a) * rr; i ? c.lineTo(x, y) : c.moveTo(x, y);
+      }
+      c.closePath(); c.stroke();
+    }
+  }
+  const d = duration(), p = position();
+  $("#viz-fill").style.width = `${d ? Math.min(100, (p / d) * 100) : 0}%`;
+  $("#viz-time").textContent = fmt(p); $("#viz-len").textContent = fmt(d);
+  vizRaf = requestAnimationFrame(vizDraw);
+}
+function vizRender() {
+  if (viz.hidden) return;
+  const b = P.src && beatById(S.nowId); if (!b) { closeViz(); return; }
+  const [tint] = beatTint(b), art = songArt(b), disc = $("#viz-disc");
+  viz.style.setProperty("--now-tint", tint);
+  disc.classList.toggle("has-art", !!art); disc.style.backgroundImage = art ? `url("${art}")` : "";
+  disc.classList.toggle("spin", S.playing && !reduceMotion);
+  $("#viz-title").textContent = b.title;
+  $("#viz-meta").textContent = [b.bpm ? `${b.bpm} BPM` : null, b.key ? `${b.key} ${camelot(b.key)}` : null, b.genre].filter(Boolean).join(" · ");
+  const t = $("#viz-toggle"); t.innerHTML = ic(S.playing ? "pause" : "play"); t.setAttribute("aria-label", S.playing ? "Pause" : "Play");
+  viz.querySelector('[data-act="prev"]').innerHTML = ic("prev"); viz.querySelector('[data-act="next"]').innerHTML = ic("next");
+  const sh = $("#viz-shuffle"); sh.innerHTML = ic("shuffle"); sh.classList.toggle("lit", S.shuffle); sh.setAttribute("aria-pressed", S.shuffle);
+  const rp = $("#viz-repeat"); rp.innerHTML = ic(S.repeat === "one" ? "repeatOne" : "repeat"); rp.classList.toggle("lit", S.repeat !== "off");
+  rp.setAttribute("aria-label", { off: "Repeat off", all: "Repeat all", one: "Repeat this song" }[S.repeat]);
+  $("#viz-mode").textContent = VIZ_MODES[vizMode]; viz.classList.toggle("mode-bars", VIZ_MODES[vizMode] === "Bars");
+  vizLoad(b);
+}
+function openViz() {
+  if (!P.src) return;
+  viz.hidden = false; viz.classList.remove("closing"); document.documentElement.classList.add("viz-open");
+  vizRender(); cancelAnimationFrame(vizRaf); vizT0 = 0; vizRaf = requestAnimationFrame(vizDraw);
+  setTimeout(() => $("#viz-toggle").focus({ preventScroll: true }), 50);
+}
+function closeViz() {
+  if (viz.hidden) return;
+  viz.classList.add("closing");
+  setTimeout(() => { viz.hidden = true; viz.classList.remove("closing"); cancelAnimationFrame(vizRaf); document.documentElement.classList.remove("viz-open"); }, 260);
+}
+document.addEventListener("keydown", (e) => {
+  if (viz.hidden) { if ((e.key === "Enter" || e.key === " ") && e.target.matches?.('[data-act="viz"]')) { e.preventDefault(); openViz(); } return; }
+  if (e.key === "Escape") closeViz();
+});
+// scrub inside the visualizer
+$("#viz-bar").addEventListener("pointerdown", (e) => {
+  const bar = e.currentTarget, go2 = (ev) => { const r = bar.getBoundingClientRect(); seek((ev.clientX - r.left) / r.width); };
+  go2(e); bar.setPointerCapture(e.pointerId);
+  const mv = (ev) => go2(ev), up = () => { bar.removeEventListener("pointermove", mv); bar.removeEventListener("pointerup", up); };
+  bar.addEventListener("pointermove", mv); bar.addEventListener("pointerup", up);
+});
+// swipe down to close
+{ let y0 = null; viz.addEventListener("touchstart", (e) => { y0 = e.target.closest(".viz-info,.viz-bar") ? null : e.touches[0].clientY; }, { passive: true });
+  viz.addEventListener("touchend", (e) => { if (y0 != null && e.changedTouches[0].clientY - y0 > 90) closeViz(); y0 = null; }, { passive: true }); }
 
 /* ------------------------------------------------------------- toast */
 let toastTimer;
@@ -1422,14 +1831,36 @@ function confirmTap(btn, key, label, run) {
 /* ------------------------------------------------------------ events */
 document.addEventListener("click", async (e) => {
   const el = e.target.closest("[data-act], [data-tab]"); if (!el) {
-    const row = e.target.closest(".beat"); if (row && !e.target.closest("button")) playBeat(row.dataset.beat); return; }
+    const row = e.target.closest(".beat"); if (row && !e.target.closest("button")) { const id = row.dataset.beat; if (S.nowId !== id || !S.playing) await playBeat(id); openViz(); } return; }
   const a = el.dataset.act, id = el.dataset.id;
   if (el.dataset.tab) { e.preventDefault(); go(el.dataset.tab); return; }
   switch (a) {
     case "play": if (S.nowId === id && S.playing) pause(); else await playBeat(id); if (!scrim.hidden && modal.querySelector(`[data-id="${id}"]`)) refreshModal(); break;
-    case "toggle": S.playing ? pause() : resume(); break;
+    case "toggle": S.playing ? await Promise.resolve(pause()) : await resume(); refreshQueue(); break;
     case "prev": step(-1); break;
     case "next": step(1); break;
+    case "shuffle": S.shuffle = !S.shuffle; P.played.clear(); if (S.nowId) P.played.add(S.nowId); savePrefs(); renderPlayer(); refreshQueue(); toast(S.shuffle ? "Shuffle on" : "Shuffle off"); break;
+    case "repeat": case "repeat-set": S.repeat = a === "repeat" ? { off: "all", all: "one", one: "off" }[S.repeat] : el.dataset.mode; savePrefs(); renderPlayer(); refreshQueue();
+      if (a === "repeat") toast({ off: "Repeat off", all: "Repeating the list", one: "Repeating this song" }[S.repeat]); break;
+    case "queue": queueSheet(); break;
+    case "viz": openViz(); break;
+    case "use": case "use-set": {
+      const b = beatById(id); if (!b) break;
+      b.use = a === "use" ? USE_NEXT[useOf(b)] : el.dataset.use; b.useAt = Date.now(); persist(); renderMain();
+      if (!scrim.hidden) { if (modal.querySelector('[data-form="song-edit"]')) { const keep = modal.querySelector("#f-title")?.value; songDetail(id); if (keep != null) modal.querySelector("#f-title").value = keep; } else if (modal.querySelector('[data-act="del-beat"]')) beatMenu(id); else refreshModal(); }
+      toast(`${b.title}: ${USE[useOf(b)]}`); break; }
+    case "viz-close": closeViz(); break;
+    case "viz-mode": vizMode = (vizMode + 1) % VIZ_MODES.length; try { localStorage.setItem("earnies-viz-mode", VIZ_MODES[vizMode]); } catch { /* fine */ } vizRender(); break;
+    case "q-next": case "q-add": {
+      const b = beatById(id); if (!b) break;
+      if (!P.src) { await playBeat(id); toast(`Playing ${b.title}`); break; }
+      S.queue = S.queue.filter((x) => x !== id);
+      if (a === "q-next") S.queue.unshift(id); else S.queue.push(id);
+      savePrefs(); renderPlayer(); refreshQueue(); toast(a === "q-next" ? `${b.title} plays next` : `Added ${b.title} to the queue`); break; }
+    case "q-play": { const i = +el.dataset.idx, qid = S.queue[i]; S.queue.splice(i, 1); savePrefs(); await playBeat(qid); break; }
+    case "q-up": { const i = +el.dataset.idx; if (i > 0) { [S.queue[i - 1], S.queue[i]] = [S.queue[i], S.queue[i - 1]]; savePrefs(); renderPlayer(); queueSheet(); } break; }
+    case "q-del": S.queue.splice(+el.dataset.idx, 1); savePrefs(); renderPlayer(); queueSheet(); break;
+    case "q-clear": S.queue = []; savePrefs(); renderPlayer(); queueSheet(); break;
     case "genre": S.genre = el.dataset.genre; renderMain(); break;
     case "add-beat": beatForm(); break;
     case "pick-file": $("#file").click(); break;
@@ -1493,12 +1924,52 @@ document.addEventListener("click", async (e) => {
 
 function openCollabModal(id) { const c = S.collabs.find((x) => x.id === id); openModal(`<div style="display:flex;justify-content:flex-end;margin:-6px -6px 6px"><button class="btn icon sm" data-act="close" aria-label="Close">${ic("x")}</button></div>${collabDetail(c, "")}`, true);
   const d = modal.querySelector(".detail"); d.classList.remove("glass"); d.style.padding = "0"; }
+/* Up next: shuffle, repeat and the songs queued by hand, then the rest of the list. */
+function refreshQueue() { if (!scrim.hidden && modal.querySelector('[data-sheet="queue"]')) queueSheet(); }
+function queueSheet() {
+  const cur = P.src && beatById(S.nowId);
+  S.queue = S.queue.filter(beatById);
+  const meta = (b) => [b.bpm ? `${b.bpm} BPM` : null, b.key ? `${esc(b.key)} ${camelot(b.key)}` : null, fmt(b.len)].filter(Boolean).join(" · ");
+  const thumb = (b) => `<span class="song-art sm" aria-hidden="true">${songArt(b) ? `<img src="${songArt(b)}" alt="">` : ic("disc")}</span>`;
+  const queued = S.queue.map(beatById).map((b, i) => `<div class="mini">
+      ${thumb(b)}
+      <button class="btn icon sm primary" data-act="q-play" data-idx="${i}" aria-label="Play ${esc(b.title)} now" style="--t1:${beatTint(b)[0]}">${ic("play")}</button>
+      <div class="grow"><b>${esc(b.title)}</b><small class="mono">${meta(b)}</small></div>
+      ${i ? `<button class="btn icon sm quiet" data-act="q-up" data-idx="${i}" aria-label="Move ${esc(b.title)} up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 14 6-6 6 6"/></svg></button>` : ""}
+      <button class="btn icon sm quiet" data-act="q-del" data-idx="${i}" aria-label="Remove ${esc(b.title)} from the queue">${ic("x")}</button></div>`).join("");
+  let rest = "";
+  if (cur) {
+    const list = contextList(), i = list.findIndex((b) => b.id === S.nowId);
+    const after = S.shuffle ? [] : (S.repeat === "off" ? list.slice(i + 1) : list.slice(i + 1).concat(list.slice(0, Math.max(0, i)))).slice(0, 6);
+    rest = `<div style="display:grid;gap:8px"><div class="kicker">Then from ${esc(contextName())}</div>
+      ${S.shuffle ? `<p class="q-hint">Shuffle picks the rest of ${esc(contextName())} at random.</p>` :
+        after.length ? `<div class="mini-list">${after.map((b) => `<div class="mini">${thumb(b)}<button class="btn icon sm primary" data-act="play" data-id="${b.id}" aria-label="Play ${esc(b.title)}" style="--t1:${beatTint(b)[0]}">${ic("play")}</button><div class="grow"><b>${esc(b.title)}</b><small class="mono">${meta(b)}</small></div><button class="btn icon sm quiet" data-act="q-next" data-id="${b.id}" aria-label="Play ${esc(b.title)} next">${ic("queue")}</button></div>`).join("")}</div>` :
+        `<p class="q-hint">${S.repeat === "one" ? "Repeat is on for this song." : "This is the last song. Turn on Repeat all to start the list again."}</p>`}</div>`;
+  }
+  openModal(`${modalHead("Player", "Up next")}
+    <div class="form" data-sheet="queue">
+      <div class="q-modes">
+        <button class="btn sm${S.shuffle ? " lit" : ""}" data-act="shuffle" aria-pressed="${S.shuffle}">${ic("shuffle")}Shuffle ${S.shuffle ? "on" : "off"}</button>
+        <div class="seg" role="group" aria-label="Repeat">${[["off", "Repeat off"], ["all", "All"], ["one", "One"]].map(([m, l]) => `<button class="btn sm${S.repeat === m ? " lit" : ""}" data-act="repeat-set" data-mode="${m}" aria-pressed="${S.repeat === m}">${m === "off" ? ic("repeat") : m === "one" ? ic("repeatOne") : ""}${l}</button>`).join("")}</div>
+      </div>
+      ${cur ? `<div style="display:grid;gap:8px"><div class="kicker">Now playing</div><div class="mini now-row">${thumb(cur)}<button class="btn icon sm primary" data-act="toggle" aria-label="${S.playing ? "Pause" : "Play"}" style="--t1:${beatTint(cur)[0]}">${ic(S.playing ? "pause" : "play")}</button><div class="grow"><b>${esc(cur.title)}</b><small class="mono">${meta(cur)}</small></div></div></div>` : ""}
+      <div style="display:grid;gap:8px"><div style="display:flex;justify-content:space-between;align-items:center"><div class="kicker">Queued by you</div>${S.queue.length ? `<button class="btn sm quiet" data-act="q-clear">Clear</button>` : ""}</div>
+        ${S.queue.length ? `<div class="mini-list">${queued}</div>` : `<p class="q-hint">Nothing queued. Tap ••• on a beat, or open a song, and pick Play next or Add to queue.</p>`}</div>
+      ${rest}
+      <div class="form-actions"><button class="btn" data-act="close">Done</button></div>
+    </div>`);
+}
 function refreshModal() {
   if (scrim.hidden) return;
+  if (modal.querySelector('[data-sheet="queue"]')) { queueSheet(); return; }
   const pid = modal.querySelector('[data-act="stage"]')?.dataset.id; if (pid) { projectDetail(pid); return; }
   if (modal.querySelector(".detail") && S.collab) openCollabModal(S.collab);
 }
 
+document.addEventListener("change", (e) => { const gid = e.target.dataset?.genreOf; if (!gid) return; const b = beatById(gid); if (!b) return;
+  b.genre = e.target.value; persist(); renderAll(); toast(`Genre set to ${b.genre}`); });
+document.addEventListener("change", (e) => { const id = e.target.dataset?.useNote; if (!id) return; const b = beatById(id); if (!b) return;
+  b.useNote = e.target.value.trim(); if (b.useNote && useOf(b) === "none") b.use = "given"; persist(); renderMain(); toast("Saved"); });
 document.addEventListener("input", (e) => { if (e.target.id === "q") { S.query = e.target.value; renderMain(); } });
 
 $("#file").addEventListener("change", (e) => { const f = e.target.files?.[0]; if (f) takeFile(f); e.target.value = ""; });
