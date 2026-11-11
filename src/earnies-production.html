@@ -639,6 +639,37 @@ html.viz-open { overflow: hidden; }
 .brand b em, .head h1 em, .hero h1 em, h2 em, h3 em { font-style: normal; }
 .brand b em, .head h1 em { color: #4F79C4; }
 .avatar { font-weight: 600; }
+/* move library between devices */
+.xfer-btn { white-space: nowrap; flex: none; }
+.xfer { display: grid; gap: 12px; }
+.xfer-card { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 14px 14px 12px; border-radius: 22px;
+  background: radial-gradient(90% 140% at 0% 0%, color-mix(in srgb, var(--t1) 45%, transparent), transparent 60%), rgba(255,255,255,.7); box-shadow: 0 0 0 1px var(--hairline); }
+.xfer-card b { font-size: 15px; }
+.xfer-card p { margin: 4px 0 0; font-size: 13px; line-height: 1.45; color: var(--ink-soft); }
+.xfer-card .xfer-size:empty { display: none; }
+.xfer-ic { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(180deg, #FFFFFF, color-mix(in srgb, var(--t1) 55%, #fff)); box-shadow: inset 0 0 0 1px rgba(120,170,205,.3); }
+.xfer-ic svg { width: 20px; height: 20px; }
+.xfer-how, .xfer-lead { margin: 16px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
+.xfer-lead { margin-top: 0; font-size: 15px; color: var(--ink); }
+.xfer-choice { display: grid; gap: 8px; margin-top: 14px; }
+.xfer-choice label { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; padding: 12px 14px; border-radius: 18px; background: rgba(255,255,255,.66); box-shadow: 0 0 0 1px var(--hairline); cursor: pointer; }
+.xfer-choice label:has(input:checked) { background: radial-gradient(80% 140% at 0% 0%, color-mix(in srgb, var(--water) 55%, transparent), transparent 70%), rgba(255,255,255,.9); box-shadow: 0 0 0 1.5px rgba(110,190,178,.8); }
+.xfer-choice input { margin: 3px 0 0; accent-color: #4DBFAF; width: 18px; height: 18px; }
+.xfer-choice b { display: block; font-size: 14.5px; }
+.xfer-choice small { display: block; margin-top: 2px; font-size: 12.5px; color: var(--ink-soft); }
+.xfer-list { margin-top: 10px; font-size: 13px; color: var(--ink-soft); }
+.xfer-list summary { cursor: pointer; }
+.xfer-list ul { margin: 6px 0 0; padding-left: 18px; max-height: 140px; overflow: auto; }
+.xfer-bar { margin-top: 16px; height: 8px; border-radius: 999px; background: rgba(255,255,255,.7); box-shadow: inset 0 0 0 1px var(--hairline); overflow: hidden; }
+.xfer-bar[hidden] { display: none; }
+.xfer-bar span { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--peach), var(--sky), var(--water)); transition: width .25s; }
+.xfer-status { margin: 10px 0 0; font-size: 12.5px; color: var(--ink-soft); min-height: 1em; }
+.xfer-status:empty { display: none; }
+.xfer-go { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+@media (max-width: 520px) {
+  .top-right .xfer-btn, .top-right .install-btn { width: 38px; min-width: 38px; padding: 0; gap: 0; font-size: 0; justify-content: center; }
+  .top-right { gap: 6px; }
+  .xfer-card { grid-template-columns: 36px minmax(0, 1fr); } .xfer-card .btn { grid-column: 1 / -1; justify-self: stretch; } .xfer-ic { width: 36px; height: 36px; } }
 </style>
 
 <div class="ambient" aria-hidden="true"><span class="spot a"></span><span class="spot b"></span><span class="spot c"></span></div>
@@ -691,7 +722,7 @@ html.viz-open { overflow: hidden; }
         <b>Earnies <em>Production</em></b>
       </a>
       <nav class="tabs glass" id="tabs-top" aria-label="Sections"></nav>
-      <div class="top-right"><button class="btn sm install-btn" data-act="install" hidden style="--t1:var(--sky)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg> Install<span class="hide-sm">&nbsp;app</span></button><span class="local-note">Saved on this device</span></div>
+      <div class="top-right"><button class="btn sm install-btn" data-act="install" hidden style="--t1:var(--sky)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg> Install<span class="hide-sm">&nbsp;app</span></button><button class="btn sm xfer-btn" data-act="xfer" style="--t1:var(--water)" aria-label="Transfer library" title="Move your library between devices"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v13M3.5 13.5 7 17l3.5-3.5"/><path d="M17 20V7M13.5 10.5 17 7l3.5 3.5"/></svg> Transfer</button><span class="local-note">Saved on this device</span></div>
     </header>
     <main id="main"></main>
   </div>
@@ -745,6 +776,7 @@ html.viz-open { overflow: hidden; }
 <div class="toast glass dense" id="toast" role="status" hidden></div>
 <input type="file" id="file" accept="audio/*,.mp3,.wav,.aiff,.aif,.flac,.m4a,.ogg" class="sr" tabindex="-1">
 <input type="file" id="img-file" accept="image/*" class="sr" tabindex="-1">
+<input type="file" id="lib-file" class="sr" tabindex="-1">
 <input type="file" id="p-file" accept="audio/*,.mp3,.wav,.aiff,.aif,.flac,.m4a,.ogg" multiple class="sr" tabindex="-1">
 
 <script>
@@ -753,6 +785,8 @@ html.viz-open { overflow: hidden; }
 
 /* ------------------------------------------------------------- icons */
 const I = {
+  download: '<path d="M12 4v11M7 10l5 5 5-5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+  transfer: '<path d="M7 4v13M3.5 13.5 7 17l3.5-3.5"/><path d="M17 20V7M13.5 10.5 17 7l3.5 3.5"/>',
   disc: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4"/>',
   layers: '<path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5"/>',
   users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2a6.5 6.5 0 0 1 3.5 5.8"/>',
@@ -1917,6 +1951,10 @@ document.addEventListener("click", async (e) => {
     case "unshare": { const c = S.collabs.find((x) => x.id === el.dataset.collab); c.beats = c.beats.filter((x) => x !== id); persist(); renderMain(); refreshModal(); break; }
     case "enter": hideStart(el.dataset.go); break;
     case "install": installApp(); break;
+    case "xfer": openTransfer(); break;
+    case "export-lib": exportLibrary(el); break;
+    case "import-lib": $("#lib-file").click(); break;
+    case "import-go": runImport(el); break;
     case "home": e.preventDefault(); showStart(); break;
     case "del-collab": confirmTap(el, id, "Tap again to remove", () => { const c = S.collabs.find((x) => x.id === id); S.collabs = S.collabs.filter((x) => x.id !== id); if (S.collab === id) S.collab = null; persist(); closeModal(); renderMain(); toast(`Removed ${c?.name}`); }); break;
   }
@@ -2221,6 +2259,225 @@ document.addEventListener("visibilitychange", () => { if (startEl.hidden || redu
 document.addEventListener("keydown", (e) => { if (e.key === "Enter" && !startEl.hidden && document.activeElement === document.body) hideStart(S.tab); });
 
 
+
+/* ---------------------------------------------- move library (export / import) */
+/* One ".earnies" file carries the whole library from one device to another:
+   "EARNIES1", the manifest's length (8 bytes), the manifest as JSON, then every
+   audio and art file back to back, untouched, so WAVs keep full quality.
+   Files are sliced out lazily on import, so even a big library never sits in memory at once. */
+const LIB_MAGIC = "EARNIES1";
+const fmtSize = (n) => n >= 1e9 ? `${(n / 1e9).toFixed(1)} GB` : n >= 1e6 ? `${Math.max(1, Math.round(n / 1e6))} MB` : `${Math.max(1, Math.round(n / 1e3))} KB`;
+const plural = (n, one, many = one + "s") => `${n} ${n === 1 ? one : many}`;
+const libKeys = () => [
+  ...S.beats.filter((b) => b.source === "file").map((b) => b.id),
+  ...[...S.beats, ...S.projects, ...S.collabs].filter((x) => x.art).map((x) => `art-${x.id}`),
+];
+function idbPut(key, blob) {
+  if (!idb) { memBlobs.set(key, blob); return Promise.resolve(); }
+  return new Promise((res, rej) => {
+    try {
+      const tx = idb.transaction("files", "readwrite"); tx.objectStore("files").put(blob, key);
+      tx.oncomplete = () => { memBlobs.delete(key); res(); };
+      tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error || new Error("aborted"));
+    } catch (err) { rej(err); }
+  });
+}
+const libSummary = (d) => [
+  d.beats.length && plural(d.beats.length, "beat or song", "beats and songs"),
+  d.projects.length && plural(d.projects.length, "project"),
+  d.collabs.length && plural(d.collabs.length, "collaborator"),
+  d.folders.length && plural(d.folders.length, "folder"),
+].filter(Boolean).join(", ");
+
+function openTransfer() {
+  const have = S.beats.length + S.projects.length + S.collabs.length;
+  openModal(`${modalHead("Phone and computer", "Move your library")}
+    <div class="xfer">
+      <div class="xfer-card" style="--t1:var(--peach)">
+        <div class="xfer-ic">${ic("upload")}</div>
+        <div class="grow"><b>Export library</b>
+          <p>${have ? `Saves ${esc(libSummary(S))} from this device into one file, with every WAV at full quality.` : "There's nothing on this device to export yet."}</p>
+          <p class="mono xfer-size" id="xfer-size"></p></div>
+        <button class="btn primary sm" data-act="export-lib"${have ? "" : " disabled"}>Export</button>
+      </div>
+      <div class="xfer-card" style="--t1:var(--sky)">
+        <div class="xfer-ic">${ic("download")}</div>
+        <div class="grow"><b>Import library</b>
+          <p>Opens a library file from your other device and adds it here. Beats you already have are matched, so you choose to replace them or skip them instead of getting copies.</p></div>
+        <button class="btn sm" data-act="import-lib" style="--t1:var(--sky)">Import</button>
+      </div>
+    </div>
+    <p class="xfer-how"><b>Mac to iPhone:</b> export here, then find the file in Downloads, right-click it, choose <b>Share</b> › <b>AirDrop</b> and pick your iPhone. On the iPhone, accept it, open Earnies, tap <b>Transfer</b> › <b>Import</b> and pick the file from <b>Downloads</b> in Files.</p>`);
+  // add up the size in the background so the dialog opens at once
+  (async () => { let n = 0; for (const k of libKeys()) { const b = await getBlob(k); if (b) n += b.size; } const el = $("#xfer-size"); if (el && n) el.textContent = `About ${fmtSize(n)}`; })();
+}
+
+async function exportLibrary(btn) {
+  btn.disabled = true; btn.textContent = "Packing…";
+  try {
+    const parts = [], files = []; let off = 0, missing = 0;
+    for (const key of libKeys()) {
+      const blob = await getBlob(key);
+      if (!blob) { if (!key.startsWith("art-")) missing++; continue; }
+      files.push({ key, type: blob.type || "", size: blob.size, off }); parts.push(blob); off += blob.size;
+    }
+    const manifest = { app: "Earnies Production", format: 1, exported: new Date().toISOString(),
+      data: { beats: S.beats, projects: S.projects, collabs: S.collabs, folders: S.folders }, files };
+    const json = new TextEncoder().encode(JSON.stringify(manifest));
+    const head = new Uint8Array(16); head.set(new TextEncoder().encode(LIB_MAGIC));
+    const dv = new DataView(head.buffer); dv.setUint32(8, json.length % 2 ** 32, true); dv.setUint32(12, Math.floor(json.length / 2 ** 32), true);
+    const day = new Date().toISOString().slice(0, 10);
+    const name = `Earnies library ${day}.earnies`;
+    const file = new Blob([head, json, ...parts], { type: "application/octet-stream" });
+    const url = URL.createObjectURL(file);
+    const a = document.createElement("a"); a.href = url; a.download = name; document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10 * 60 * 1000);   // big files need time to save
+    btn.textContent = "Saved";
+    toast(`Exported ${fmtSize(file.size)}${missing ? `. ${plural(missing, "file")} weren't on this device and were left out` : ""}`);
+  } catch (err) {
+    btn.disabled = false; btn.textContent = "Export";
+    toast("The export didn't work. Try again, or free up some space.");
+  }
+}
+
+/* Read the file's manifest; the audio stays in the file until it's copied in. */
+async function readLibraryFile(file) {
+  const head = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+  if (new TextDecoder().decode(head.slice(0, 8)) !== LIB_MAGIC) throw new Error("not-library");
+  const dv = new DataView(head.buffer), len = dv.getUint32(8, true) + dv.getUint32(12, true) * 2 ** 32;
+  const m = JSON.parse(await file.slice(16, 16 + len).text());
+  const d = m.data || {};
+  for (const k of ["beats", "projects", "collabs", "folders"]) d[k] = Array.isArray(d[k]) ? d[k].filter((x) => x && x.id) : [];
+  m.data = d; m.base = 16 + len;
+  return m;
+}
+
+/* Work out which incoming items are already here: same id (it came from this
+   device before), or the same name; for beats also the same length. */
+const norm = (s) => String(s ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+function planImport(m) {
+  const d = m.data, map = { folders: new Map(), projects: new Map(), collabs: new Map(), beats: new Map() };
+  const match = (list, x, same) => list.find((y) => y.id === x.id) || list.find((y) => same(y, x));
+  for (const f of d.folders) { const hit = match(S.folders, f, (y, x) => y.section === x.section && norm(y.name) === norm(x.name)); if (hit) map.folders.set(f.id, hit.id); }
+  for (const p of d.projects) { const hit = match(S.projects, p, (y, x) => norm(y.title) && norm(y.title) === norm(x.title)); if (hit) map.projects.set(p.id, hit.id); }
+  for (const c of d.collabs) { const hit = match(S.collabs, c, (y, x) => norm(y.name) && norm(y.name) === norm(x.name)); if (hit) map.collabs.set(c.id, hit.id); }
+  const taken = new Set();
+  for (const b of d.beats) {
+    const hit = match(S.beats.filter((y) => !taken.has(y.id)), b, (y, x) => norm(y.title) && norm(y.title) === norm(x.title)
+      && (y.area || "") === (x.area || "") && (!(y.len > 0 && x.len > 0) || Math.abs(y.len - x.len) < 1.5));
+    if (hit) { map.beats.set(b.id, hit.id); taken.add(hit.id); }
+  }
+  return map;
+}
+
+let pendingLib = null;
+async function pickedLibrary(file) {
+  let m;
+  try { m = await readLibraryFile(file); }
+  catch { toast("That isn't an Earnies library file. Pick the .earnies file you exported."); return; }
+  const map = planImport(m), d = m.data, dups = map.beats.size;
+  pendingLib = { file, m, map };
+  const size = m.files.reduce((n, f) => n + f.size, 0);
+  openModal(`${modalHead("Import library", "Bring it in")}
+    <p class="xfer-lead">This file has ${esc(libSummary(d)) || "nothing in it"}${size ? ` <span class="mono">(${fmtSize(size)})</span>` : ""}.
+      ${dups ? `<b>${plural(dups, "beat or song is", "beats and songs are")} already on this device.</b>` : "None of it is on this device yet."}</p>
+    ${dups ? `<div class="xfer-choice" role="radiogroup" aria-label="Beats you already have">
+      <label><input type="radio" name="dup" value="replace" checked><span><b>Replace them</b><small>Use the imported version and audio. No copies.</small></span></label>
+      <label><input type="radio" name="dup" value="skip"><span><b>Skip them</b><small>Keep what's on this device and only add new ones.</small></span></label>
+      <label><input type="radio" name="dup" value="both"><span><b>Keep both</b><small>Add the imported ones as separate copies.</small></span></label>
+    </div>
+    <details class="xfer-list"><summary>Show the ${plural(dups, "match", "matches")}</summary><ul>${[...map.beats.keys()].map((id) => `<li>${esc(d.beats.find((b) => b.id === id)?.title)}</li>`).join("")}</ul></details>` : ""}
+    <div class="xfer-bar" id="xfer-bar" hidden><span></span></div>
+    <p class="xfer-status mono" id="xfer-status" aria-live="polite"></p>
+    <div class="xfer-go"><button class="btn quiet" data-act="close">Cancel</button><button class="btn primary" data-act="import-go"${d.beats.length + d.projects.length + d.collabs.length + d.folders.length ? "" : " disabled"}>${ic("download")}Import</button></div>`);
+}
+
+async function runImport(btn) {
+  if (!pendingLib) return;
+  const { file, m, map } = pendingLib, d = m.data;
+  const mode = modal.querySelector('input[name="dup"]:checked')?.value || "replace";
+  btn.disabled = true; modal.querySelectorAll('input[name="dup"]').forEach((r) => (r.disabled = true));
+  const bar = $("#xfer-bar"), status = $("#xfer-status");
+  bar.hidden = false;
+  // decide each beat's id here: matched beats keep this device's id, unless copies were asked for
+  const bmap = new Map(), addB = [], replB = [];
+  for (const b of d.beats) {
+    const local = map.beats.get(b.id);
+    if (local && mode !== "both") { bmap.set(b.id, local); if (mode === "replace") replB.push(b); continue; }
+    const id = S.beats.some((y) => y.id === b.id) || addB.some((y) => y.id === b.id) ? uid("b") : b.id;
+    bmap.set(b.id, id); addB.push(b);
+  }
+  const fmap = (id) => (id == null ? id : map.folders.get(id) ?? id);
+  const pmap = (id) => (id == null ? id : map.projects.get(id) ?? id);
+  const cmap = (id) => map.collabs.get(id) ?? id;
+  const bm = (id) => bmap.get(id) ?? id;
+  const ownerId = (id) => bmap.get(id) ?? map.projects.get(id) ?? map.collabs.get(id) ?? id;
+  // which stored files to copy, under which name on this device
+  const copyBeat = new Set([...addB, ...replB].map((b) => b.id));
+  const copyArt = (x, kind) => kind === "beat" ? copyBeat.has(x) : kind === "project" ? (!map.projects.has(x) || mode === "replace") : (!map.collabs.has(x) || mode === "replace");
+  const kindOf = (id) => d.beats.some((b) => b.id === id) ? "beat" : d.projects.some((p) => p.id === id) ? "project" : "collab";
+  const jobs = m.files.filter((f) => { const art = f.key.startsWith("art-"), id = art ? f.key.slice(4) : f.key; return art ? copyArt(id, kindOf(id)) : copyBeat.has(id); });
+  try { await navigator.storage?.persist?.(); } catch { /* fine */ }
+  try {
+    const need = jobs.reduce((n, f) => n + f.size, 0), est = await navigator.storage?.estimate?.();
+    if (est?.quota && est.quota - (est.usage || 0) < need * 1.05) {
+      status.textContent = `This device only has room for about ${fmtSize(Math.max(0, est.quota - (est.usage || 0)))} more, and the import needs ${fmtSize(need)}. Free up some space and try again.`;
+      btn.disabled = false; bar.hidden = true; return;
+    }
+  } catch { /* no estimate: just try */ }
+  const total = jobs.reduce((n, f) => n + f.size, 0) || 1; let done = 0, failed = 0;
+  const copied = new Set();
+  for (let i = 0; i < jobs.length; i++) {
+    const f = jobs[i], art = f.key.startsWith("art-"), id = art ? f.key.slice(4) : f.key;
+    const key = art ? `art-${ownerId(id)}` : bm(id);
+    status.textContent = `Copying ${i + 1} of ${jobs.length}…`;
+    try { await idbPut(key, file.slice(m.base + f.off, m.base + f.off + f.size, f.type)); copied.add(f.key); }
+    catch { failed++; if (!art) break; }
+    done += f.size; bar.firstElementChild.style.width = `${Math.round((done / total) * 100)}%`;
+  }
+  if (failed && jobs.some((f) => !f.key.startsWith("art-") && !copied.has(f.key))) {
+    status.textContent = "Ran out of room or the file couldn't be read part way through. Whatever was copied is kept; free up space and import again to finish.";
+  }
+  // now the library itself
+  const fix = (x) => ({ ...x, folder: fmap(x.folder) });
+  for (const f of d.folders) if (!map.folders.has(f.id)) S.folders.push({ ...f });
+  const art = (x) => copied.has(`art-${x.id}`);
+  let newP = 0, newC = 0;
+  for (const p of d.projects) {
+    const beats = (p.beats || []).map(bm), local = S.projects.find((y) => y.id === map.projects.get(p.id));
+    if (!local) { S.projects.push({ ...fix(p), beats: [...new Set(beats)], art: art(p) && !!p.art }); newP++; continue; }
+    if (mode === "replace") Object.assign(local, fix(p), { id: local.id, art: local.art || (art(p) && !!p.art) });
+    local.beats = [...new Set([...(local.beats || []), ...beats])];
+  }
+  for (const c of d.collabs) {
+    const beats = (c.beats || []).map(bm), local = S.collabs.find((y) => y.id === map.collabs.get(c.id));
+    if (!local) { S.collabs.push({ ...c, beats: [...new Set(beats)] }); newC++; continue; }
+    if (mode === "replace") Object.assign(local, c, { id: local.id, notes: local.notes?.length ? local.notes : c.notes });
+    local.beats = [...new Set([...(local.beats || []), ...beats])];
+  }
+  const shape = (b) => ({ ...fix(b), id: bmap.get(b.id), project: pmap(b.project), collab: b.collab ? cmap(b.collab) : b.collab, art: !!b.art && art(b) });
+  let added = 0, replaced = 0, lost = 0;
+  for (const b of addB) {
+    if (b.source === "file" && !copied.has(b.id)) { lost++; continue; }
+    S.beats.unshift(shape(b)); added++;
+  }
+  for (const b of replB) {
+    const local = beatById(bmap.get(b.id)); if (!local) continue;
+    if (b.source === "file" && !copied.has(b.id)) { lost++; continue; }
+    const had = local.art; Object.assign(local, shape(b)); local.art = local.art || had; replaced++;
+  }
+  // refresh art for anything that got new pictures
+  for (const k of copied) if (k.startsWith("art-")) { const id = ownerId(k.slice(4)); if (artUrls.has(id)) URL.revokeObjectURL(artUrls.get(id)); artUrls.delete(id); }
+  persist(); pendingLib = null;
+  await loadArt(); renderAll();
+  const skipped = mode === "skip" ? map.beats.size : 0;
+  let msg = [added && `Added ${plural(added, "beat or song", "beats and songs")}`, replaced && `replaced ${replaced}`, newP && `${plural(newP, "project")}`, newC && `${plural(newC, "collaborator")}`, skipped && `skipped ${skipped} you already had`, lost && `${lost} couldn't be copied`].filter(Boolean).join(", ") || "Everything was already here";
+  msg = msg[0].toUpperCase() + msg.slice(1);
+  status.textContent = msg + ".";
+  btn.outerHTML = `<button class="btn primary" data-act="close">Done</button>`;
+  toast(msg);
+}
+$("#lib-file").addEventListener("change", (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) pickedLibrary(f); });
 
 /* ------------------------------------------------------- install (PWA) */
 /* Only the hosted app build carries a manifest; inside the preview the
