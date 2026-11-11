@@ -467,6 +467,7 @@ html.viz-open { overflow: hidden; }
 .drop-sm { padding: 16px 14px; gap: 4px; font-size: 13px; }
 .drop-sm svg { width: 22px; height: 22px; }
 .drop.busy { pointer-events: none; opacity: .7; }
+.drop.drop-sm { min-height: 64px; padding: 12px 16px; }
 .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
 .err { color: var(--danger); font-size: 13px; }
 .stepper { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
@@ -1590,17 +1591,31 @@ function folderForm(sec, f) {
 /* ------------------------------------------------------- beat menu */
 function beatMenu(id) {
   const b = beatById(id); if (!b) return;
-  openModal(`${modalHead("Beat", esc(b.title))}
-    <div class="form">
+  // when the sheet redraws (new art, tag change), keep what was typed but not saved yet
+  const open = modal.querySelector(`[data-form="beat-edit"][data-id="${b.id}"]`);
+  const keep = open ? { title: $("#f-title").value, bpm: $("#f-bpm").value, key: $("#f-key").value, genre: $("#f-genre").value, file: $("#drop-label").textContent, sub: $("#drop-sub").textContent } : null;
+  if (!open) pendingFile = null;
+  const keyOpts = KEYS.map(([k, c]) => `<option value="${k}"${b.key === k ? " selected" : ""}>${k} · ${c}</option>`).join("");
+  openModal(`${modalHead(`Beat${b.len ? ` · ${fmt(b.len)}` : ""}`, esc(b.title))}
+    <form class="form" data-form="beat-edit" data-id="${b.id}" novalidate>
       <div class="art-row"><button type="button" class="art-tile" data-act="art" data-kind="song" data-id="${b.id}" aria-label="${artOf(b.id) ? "Change" : "Add"} cover art">${artOf(b.id) ? `<img src="${artOf(b.id)}" alt="">` : ic("image")}</button>
         <div style="display:grid;gap:8px"><div class="kicker">Cover art</div><div class="acts"><button type="button" class="btn sm" data-act="art" data-kind="song" data-id="${b.id}">${ic("image")}${artOf(b.id) ? "Change art" : "Add cover art"}</button></div></div></div>
-      <label><span class="kicker">Genre</span><select class="field" data-genre-of="${b.id}">${genreOptions(b.genre)}</select></label>
+      <label>Title<input class="field" id="f-title" value="${esc(b.title)}" autocomplete="off" required></label>
+      <div class="row2">
+        <label>BPM<input class="field mono" id="f-bpm" type="number" inputmode="numeric" min="40" max="300" value="${b.bpm || ""}" placeholder="92"></label>
+        <label>Key<select class="field" id="f-key"><option value="">No key yet</option>${keyOpts}</select></label>
+      </div>
+      <label>Genre<select class="field" id="f-genre">${b.genre ? "" : `<option value="" selected>No genre yet</option>`}${genreOptions(b.genre)}</select></label>
+      <button type="button" class="drop drop-sm" id="drop" data-act="pick-file">${ic("upload")}<b id="drop-label">Replace the audio file</b><span id="drop-sub">Optional · if you uploaded the wrong version</span></button>
       <div style="display:grid;gap:8px"><div class="kicker">Given or used?</div><div class="use-seg" role="group" aria-label="Given or used">${Object.entries(USE).map(([k, l]) => `<button type="button" class="btn sm${useOf(b) === k ? " lit" : " quiet"}" data-act="use-set" data-use="${k}" data-id="${b.id}" aria-pressed="${useOf(b) === k}">${l}</button>`).join("")}</div>
         <input class="field" data-use-note="${b.id}" value="${esc(b.useNote || "")}" placeholder="Who got it, or which song it's on" autocomplete="off" aria-label="Who got it, or which song it's on"></div>
       <div style="display:grid;gap:8px"><div class="kicker">Queue</div><div class="acts"><button type="button" class="btn sm" data-act="q-next" data-id="${b.id}">${ic("queue")}Play next</button><button type="button" class="btn sm" data-act="q-add" data-id="${b.id}">${ic("queueAdd")}Add to queue</button></div></div>
-      ${foldersIn("beats").length ? `<label><span class="kicker">Folder</span>${folderSelect("beats", b.folder, "beat", b.id)}</label>` : `<p style="margin:0;color:var(--ink-soft);font-size:13.5px">Make a folder with the Folder button to sort your beats.</p>`}
-      <div class="form-actions" style="justify-content:space-between"><button class="btn sm quiet danger" data-act="del-beat" data-id="${b.id}">${ic("trash")}Delete beat</button><button class="btn" data-act="close">Done</button></div>
-    </div>`);
+      ${foldersIn("beats").length ? `<label><span class="kicker">Folder</span>${folderSelect("beats", b.folder, "beat", b.id)}</label>` : ""}
+      <p class="err" id="f-err" hidden></p>
+      <div class="form-actions" style="justify-content:space-between"><button type="button" class="btn sm quiet danger" data-act="del-beat" data-id="${b.id}">${ic("trash")}Delete</button><span style="display:flex;gap:8px"><button type="button" class="btn quiet" data-act="close">Cancel</button><button class="btn primary" type="submit">Save changes</button></span></div>
+    </form>`);
+  if (keep) { $("#f-title").value = keep.title; $("#f-bpm").value = keep.bpm; $("#f-key").value = keep.key; $("#f-genre").value = keep.genre; if (pendingFile) { $("#drop-label").textContent = keep.file; $("#drop-sub").textContent = keep.sub; } }
+  else setTimeout(() => modal.querySelector("#f-title")?.blur(), 40);   // don't pop the iPhone keyboard on open
 }
 
 /* ------------------------------------------- upload into a project */
@@ -2117,6 +2132,21 @@ document.addEventListener("submit", async (e) => {
     S.beats.unshift({ id, title, bpm: bpm > 0 ? bpm : null, key: $("#f-key").value || null, genre: $("#f-genre").value, len: info.len, peaks: info.peaks, source: "file", folder: S.open.beats, added: Date.now() });
     if (pendingArt) await setArt(S.beats[0], pendingArt);
     persist(); closeModal(); S.genre = "All"; S.query = ""; renderAll(); toast(`Added ${title}`);
+  }
+  if (kind === "beat-edit") {
+    const b = beatById(form.dataset.id); if (!b) return closeModal();
+    const title = $("#f-title").value.trim(); if (!title) return showErr("Give the beat a title.");
+    const bpmRaw = $("#f-bpm").value.trim(), bpm = parseInt(bpmRaw, 10);
+    if (bpmRaw && !(bpm >= 20 && bpm <= 400)) return showErr("BPM should be a number like 92 or 140.");
+    const btn = form.querySelector('[type="submit"]'); btn.disabled = true; btn.textContent = "Saving…";
+    if (pendingFile) {
+      const f = pendingFile, info = await analyse(f);
+      await putBlob(b.id, f);
+      b.len = info.len; b.peaks = info.peaks; b.source = "file"; pendingFile = null;
+      if (S.nowId === b.id) { pause(true); P.src = null; S.nowId = null; }
+    }
+    b.title = title; b.bpm = bpm > 0 ? bpm : null; b.key = $("#f-key").value || null; b.genre = $("#f-genre").value || null;
+    persist(); closeModal(); renderAll(); toast(`Saved ${title}`);
   }
   if (kind === "folder") {
     const name = $("#fo-name").value.trim(); if (!name) return showErr("Give the folder a name.");
