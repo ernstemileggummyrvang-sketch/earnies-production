@@ -640,6 +640,21 @@ html.viz-open { overflow: hidden; }
 .brand b em, .head h1 em { color: #4F79C4; }
 .avatar { font-weight: 600; }
 /* move library between devices */
+.xfer-btn[data-sync] { position: relative; }
+.xfer-btn[data-sync]::before { content: ""; position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: transparent; }
+.xfer-btn[data-sync="ok"]::before { background: #4DBFAF; }
+.xfer-btn[data-sync="busy"]::before { background: #6DB3E0; animation: pulse 1s ease-in-out infinite alternate; }
+.xfer-btn[data-sync="error"]::before { background: #E99A6A; }
+@keyframes pulse { from { opacity: .35; } to { opacity: 1; } }
+.cloud-btns { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.cloud-steps li { font-size: 14px; }
+.cloud-form { display: grid; gap: 12px; margin-top: 18px; }
+.cloud-form label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+.cloud-form .err:empty { display: none; }
+.cloud-or { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--ink-mute); }
+.cloud-or::before, .cloud-or::after { content: ""; flex: 1; height: 1px; background: var(--hairline); }
+.cloud-go { justify-content: space-between; margin-top: 4px; }
+@media (max-width: 520px) { .cloud-btns { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; } .cloud-btns .btn { flex: 1; } }
 .xfer-btn { white-space: nowrap; flex: none; }
 .xfer { display: grid; gap: 12px; }
 .xfer-card { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 14px 14px 12px; border-radius: 22px;
@@ -785,6 +800,7 @@ html.viz-open { overflow: hidden; }
 
 /* ------------------------------------------------------------- icons */
 const I = {
+  cloud: '<path d="M7 18.5h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.6 9.1 4.75 4.75 0 0 0 7 18.5Z"/>',
   download: '<path d="M12 4v11M7 10l5 5 5-5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
   transfer: '<path d="M7 4v13M3.5 13.5 7 17l3.5-3.5"/><path d="M17 20V7M13.5 10.5 17 7l3.5 3.5"/>',
   disc: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4"/>',
@@ -943,7 +959,7 @@ S.shuffle = !!prefs.shuffle;
 S.repeat = ["off", "all", "one"].includes(prefs.repeat) ? prefs.repeat : "off";
 S.queue = Array.isArray(prefs.queue) ? prefs.queue.filter((id) => S.beats.some((b) => b.id === id)) : [];
 const savePrefs = () => { try { localStorage.setItem(PREF_KEY, JSON.stringify({ shuffle: S.shuffle, repeat: S.repeat, queue: S.queue })); } catch { /* keep in memory */ } };
-const persist = () => store.save({ beats: S.beats, projects: S.projects, collabs: S.collabs, folders: S.folders });
+const persist = () => { stampChanges(); store.save({ beats: S.beats, projects: S.projects, collabs: S.collabs, folders: S.folders }); cloudSoon(); };
 const uid = (p) => `${p}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmt = (s) => { if (!isFinite(s) || s < 0) s = 0; const m = Math.floor(s / 60); return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`; };
@@ -1955,6 +1971,13 @@ document.addEventListener("click", async (e) => {
     case "export-lib": exportLibrary(el); break;
     case "import-lib": $("#lib-file").click(); break;
     case "import-go": runImport(el); break;
+    case "cloud-setup": openCloudSetup(); break;
+    case "cloud-sync": cloud.last = 0; cloudSync(); break;
+    case "cloud-off": confirmTap(el, "cloud-off", "Tap again to turn off", cloudDisconnect); break;
+    case "cloud-copycode": copyText(cloudCode(cloud.cfg)).then((ok) => toast(ok ? "Code copied. Paste it on your iPhone." : "Couldn't copy. Try again.")); break;
+    case "cloud-cmd": { const c = cloudForm(), err = $("#cl-err"); if (!c.endpoint || !c.bucket || !c.keyId || !c.key) { err.textContent = "Fill in all four boxes first."; break; }
+      err.textContent = ""; copyText(corsCommand(c)).then((ok) => toast(ok ? "Command copied. Paste it into Terminal and press Return." : "Couldn't copy the command.")); break; }
+    case "cloud-connect": cloudConnect(el); break;
     case "home": e.preventDefault(); showStart(); break;
     case "del-collab": confirmTap(el, id, "Tap again to remove", () => { const c = S.collabs.find((x) => x.id === id); S.collabs = S.collabs.filter((x) => x.id !== id); if (S.collab === id) S.collab = null; persist(); closeModal(); renderMain(); toast(`Removed ${c?.name}`); }); break;
   }
@@ -2293,6 +2316,14 @@ function openTransfer() {
   const have = S.beats.length + S.projects.length + S.collabs.length;
   openModal(`${modalHead("Phone and computer", "Move your library")}
     <div class="xfer">
+      <div class="xfer-card cloud-card" style="--t1:var(--water)">
+        <div class="xfer-ic">${ic("cloud")}</div>
+        <div class="grow"><b>Cloud sync</b>
+          <p>${cloudOn() ? `On. Beats sync automatically with your Backblaze bucket <b>${esc(cloud.cfg.bucket)}</b>.` : "Sync every beat between your Mac and iPhone automatically, using your own free Backblaze account."}</p>
+          ${cloudOn() ? `<p class="mono xfer-size" id="cloud-status">${esc(cloudLine())}</p>` : ""}</div>
+        ${cloudOn() ? `<div class="cloud-btns"><button class="btn primary sm" data-act="cloud-sync" style="--t1:var(--water);--t2:var(--sky)">Sync now</button><button class="btn sm quiet" data-act="cloud-copycode">Copy code</button><button class="btn sm quiet" data-act="cloud-off">Turn off</button></div>`
+          : `<button class="btn primary sm" data-act="cloud-setup" style="--t1:var(--water);--t2:var(--sky)">Set up</button>`}
+      </div>
       <div class="xfer-card" style="--t1:var(--peach)">
         <div class="xfer-ic">${ic("upload")}</div>
         <div class="grow"><b>Export library</b>
@@ -2479,6 +2510,236 @@ async function runImport(btn) {
 }
 $("#lib-file").addEventListener("change", (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) pickedLibrary(f); });
 
+/* ------------------------------------------------- cloud sync (Backblaze B2) */
+/* The library (beats, projects, collaborators, folders) lives in one
+   "earnies/library.json" in the user's own B2 bucket, next to every audio and
+   art file under "earnies/files/". Each device merges by record: the newest
+   change wins, deletions travel as tombstones. Requests use presigned S3 URLs,
+   so the browser sends no custom headers. Keys stay on the user's devices. */
+const CLOUD_KEY = "earnies-cloud-v1";
+const cloud = { cfg: null, busy: false, again: false, timer: 0, last: 0, state: "off", msg: "", err: "" };
+try { cloud.cfg = JSON.parse(localStorage.getItem(CLOUD_KEY) || "null"); } catch { cloud.cfg = null; }
+const cloudOn = () => !!(cloud.cfg && cloud.cfg.endpoint && cloud.cfg.bucket && cloud.cfg.keyId && cloud.cfg.key);
+function cloudSaveCfg(c) { cloud.cfg = c; try { c ? localStorage.setItem(CLOUD_KEY, JSON.stringify(c)) : localStorage.removeItem(CLOUD_KEY); } catch { /* fine */ } }
+function cloudNormalize(c) {
+  let ep = String(c.endpoint || "").trim().replace(/\/+$/, "");
+  if (!/^https?:\/\//.test(ep)) ep = "https://" + ep;
+  const region = String(c.region || "").trim() || (ep.match(/s3\.([a-z0-9-]+)\.backblazeb2\.com/) || [])[1] || "us-east-1";
+  return { endpoint: ep, region, bucket: String(c.bucket || "").trim(), keyId: String(c.keyId || "").trim(), key: String(c.key || "").trim() };
+}
+
+/* AWS signature v4, query-string flavour */
+const te = new TextEncoder();
+const hex = (buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+const enc3986 = (s) => encodeURIComponent(s).replace(/[!'()*]/g, (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase());
+async function hmac(key, msg) { const k = await crypto.subtle.importKey("raw", typeof key === "string" ? te.encode(key) : key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]); return crypto.subtle.sign("HMAC", k, te.encode(msg)); }
+async function presign(method, objKey, now = new Date(), expires = 3600) {
+  const c = cloud.cfg, u = new URL(c.endpoint);
+  const path = "/" + [c.bucket, ...objKey.split("/")].map(enc3986).join("/");
+  const amz = now.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""), day = amz.slice(0, 8);
+  const scope = `${day}/${c.region}/s3/aws4_request`;
+  const q = { "X-Amz-Algorithm": "AWS4-HMAC-SHA256", "X-Amz-Credential": `${c.keyId}/${scope}`, "X-Amz-Date": amz, "X-Amz-Expires": String(expires), "X-Amz-SignedHeaders": "host" };
+  const qs = Object.keys(q).sort().map((k) => `${enc3986(k)}=${enc3986(q[k])}`).join("&");
+  const canon = [method, path, qs, `host:${u.host}\n`, "host", "UNSIGNED-PAYLOAD"].join("\n");
+  const sts = ["AWS4-HMAC-SHA256", amz, scope, hex(await crypto.subtle.digest("SHA-256", te.encode(canon)))].join("\n");
+  let k = await hmac("AWS4" + c.key, day); k = await hmac(k, c.region); k = await hmac(k, "s3"); k = await hmac(k, "aws4_request");
+  return `${u.origin}${path}?${qs}&X-Amz-Signature=${hex(await hmac(k, sts))}`;
+}
+class CloudError extends Error { constructor(msg, status) { super(msg); this.status = status; } }
+async function s3(method, objKey, body) {
+  let r;
+  try { r = await fetch(await presign(method, objKey), { method, body, cache: "no-store", mode: "cors" }); }
+  catch { throw new CloudError("Couldn't reach Backblaze. Check your internet, and that the setup command was run once on the Mac.", 0); }
+  if (method === "GET" && r.status === 404) return null;
+  if (!r.ok && !(method === "DELETE" && r.status === 404)) {
+    const t = await r.text().catch(() => "");
+    const code = (t.match(/<Code>([^<]+)<\/Code>/) || [])[1] || r.status;
+    throw new CloudError(r.status === 403 || r.status === 401 ? `Backblaze said no (${code}). Check the key ID, key and bucket name.` : `Backblaze error (${code}).`, r.status);
+  }
+  return r;
+}
+const LIB_OBJ = "earnies/library.json", fileObj = (k) => `earnies/files/${k}`;
+
+/* change tracking: stamp records that changed since the last save, remember deletions */
+const TOMB_KEY = "earnies-deleted-v1";
+let tombs = (() => { try { return JSON.parse(localStorage.getItem(TOMB_KEY) || "{}") || {}; } catch { return {}; } })();
+const saveTombs = () => { try { localStorage.setItem(TOMB_KEY, JSON.stringify(tombs)); } catch { /* fine */ } };
+const COLLS = ["beats", "projects", "collabs", "folders"];
+const snap = new Map();
+const recJson = (x) => { const { mod, ...rest } = x; return JSON.stringify(rest); };
+function snapAll() { snap.clear(); for (const k of COLLS) for (const x of S[k]) snap.set(x.id, recJson(x)); }
+function stampChanges() {
+  const now = Date.now(), seen = new Set();
+  for (const k of COLLS) for (const x of S[k]) {
+    seen.add(x.id); const j = recJson(x);
+    if (snap.get(x.id) !== j) { x.mod = now; snap.set(x.id, j); }
+  }
+  let gone = false;
+  for (const id of [...snap.keys()]) if (!seen.has(id)) { tombs[id] = now; snap.delete(id); gone = true; }
+  if (gone) saveTombs();
+}
+
+/* merge two libraries: newest record wins, tombstones remove older records */
+function mergeLib(local, remote) {
+  const deleted = { ...(remote.deleted || {}) };
+  for (const [id, t] of Object.entries(local.deleted || {})) deleted[id] = Math.max(deleted[id] || 0, t);
+  const out = { deleted }, won = new Map();
+  for (const k of COLLS) {
+    const byId = new Map();
+    for (const x of remote[k] || []) if (x && x.id) { byId.set(x.id, x); won.set(x.id, "remote"); }
+    for (const x of local[k] || []) {
+      const r = byId.get(x.id);
+      if (!r || (x.mod || 0) > (r.mod || 0)) { byId.set(x.id, x); won.set(x.id, "local"); }
+    }
+    // keep this device's order, then anything new from the cloud on top
+    const order = [...(remote[k] || []).map((x) => x.id).filter((id) => !(local[k] || []).some((y) => y.id === id)), ...(local[k] || []).map((x) => x.id)];
+    out[k] = [...new Set(order)].map((id) => byId.get(id)).filter((x) => x && !(deleted[x.id] >= (x.mod || 0)));
+  }
+  return { lib: out, won };
+}
+
+function cloudStatus(state, msg) {
+  cloud.state = state; cloud.msg = msg || "";
+  document.querySelectorAll(".xfer-btn").forEach((b) => { b.dataset.sync = cloudOn() ? state : "off"; });
+  const el = $("#cloud-status"); if (el) el.textContent = cloudLine();
+  const note = $(".local-note"); if (note) note.textContent = cloudOn() ? (state === "busy" ? "Syncing…" : state === "error" ? "Sync paused" : "Synced") : "Saved on this device";
+}
+const cloudLine = () => !cloudOn() ? "" : cloud.state === "busy" ? cloud.msg || "Syncing…" : cloud.state === "error" ? cloud.msg : cloud.last ? `Synced ${new Date(cloud.last).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Ready";
+
+function cloudSoon(ms = 4000) { if (!cloudOn()) return; clearTimeout(cloud.timer); cloud.timer = setTimeout(() => cloudSync(), ms); }
+async function cloudSync() {
+  if (!cloudOn() || !idb) return;
+  if (cloud.busy) { cloud.again = true; return; }
+  cloud.busy = true; cloudStatus("busy", "Syncing…");
+  try {
+    stampChanges();
+    const res = await s3("GET", LIB_OBJ);
+    const remote = res ? await res.json().catch(() => ({})) : {};
+    const files = { ...(remote.files || {}) };
+    const local = { beats: S.beats, projects: S.projects, collabs: S.collabs, folders: S.folders, deleted: tombs };
+    const { lib, won } = mergeLib(local, remote);
+    // apply to this device without re-stamping
+    const before = JSON.stringify(COLLS.map((k) => S[k]));
+    for (const k of COLLS) S[k] = lib[k];
+    tombs = lib.deleted; saveTombs();
+    snapAll(); store.save({ beats: S.beats, projects: S.projects, collabs: S.collabs, folders: S.folders });
+    S.queue = S.queue.filter((id) => beatById(id));
+    const changedHere = before !== JSON.stringify(COLLS.map((k) => S[k]));
+    if (changedHere) { renderMain(); renderPlayer(); }
+    // files: send what the cloud lacks, fetch what this device lacks
+    const keys = libKeys(), ownerOf = (k) => (k.startsWith("art-") ? k.slice(4) : k);
+    const jobs = [];
+    for (const key of keys) {
+      const lb = await getBlob(key), rf = files[key];
+      if (lb && !rf) jobs.push(["up", key, lb]);
+      else if (!lb && rf) jobs.push(["down", key, rf]);
+      else if (lb && rf && lb.size !== rf.size) jobs.push([won.get(ownerOf(key)) === "local" ? "up" : "down", key, won.get(ownerOf(key)) === "local" ? lb : rf]);
+    }
+    let i = 0, gotArt = false, failed = 0;
+    for (const [dir, key, x] of jobs) {
+      i++; cloudStatus("busy", `${dir === "up" ? "Uploading" : "Downloading"} ${i} of ${jobs.length}…`);
+      try {
+        if (dir === "up") { await s3("PUT", fileObj(key), new Blob([x])); files[key] = { size: x.size, type: x.type || "" }; }
+        else {
+          const r = await s3("GET", fileObj(key));
+          if (!r) { delete files[key]; continue; }
+          const b = new Blob([await r.blob()], { type: x.type || "" });
+          await idbPut(key, b); if (key.startsWith("art-")) gotArt = true;
+        }
+      } catch (err) { if (err.status === 403 || err.status === 0) throw err; failed++; }
+    }
+    // clear out files of deleted items
+    for (const key of Object.keys(files)) {
+      if (lib.deleted[ownerOf(key)] || (key.startsWith("art-") && ![...S.beats, ...S.projects, ...S.collabs].some((x) => x.id === ownerOf(key) && x.art))) {
+        if (!keys.includes(key)) { await s3("DELETE", fileObj(key)).catch(() => {}); delete files[key]; }
+      }
+    }
+    for (const id of Object.keys(lib.deleted)) if (!beatById(id)) { delBlob(id); if (artUrls.has(id)) { URL.revokeObjectURL(artUrls.get(id)); artUrls.delete(id); delBlob(`art-${id}`); } }
+    // forget tombstones older than 90 days
+    const old = Date.now() - 90 * 864e5; for (const [id, t] of Object.entries(lib.deleted)) if (t < old) delete lib.deleted[id];
+    await s3("PUT", LIB_OBJ, new Blob([JSON.stringify({ app: "Earnies Production", format: 1, updated: Date.now(), beats: S.beats, projects: S.projects, collabs: S.collabs, folders: S.folders, deleted: lib.deleted, files })]));
+    if (gotArt) await loadArt();
+    if (changedHere || gotArt || jobs.length) renderAll();
+    cloud.last = Date.now(); cloud.err = "";
+    cloudStatus(failed ? "error" : "ok", failed ? `${plural(failed, "file")} didn't sync. It will try again.` : "");
+  } catch (err) {
+    cloud.err = err.message || "Sync failed"; cloudStatus("error", cloud.err);
+  } finally {
+    cloud.busy = false;
+    if (cloud.again) { cloud.again = false; cloudSoon(1000); }
+  }
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && cloudOn() && Date.now() - cloud.last > 20000) cloudSoon(500); });
+addEventListener("online", () => cloudSoon(500));
+
+/* setup */
+const CLOUD_CODE = "earnies-cloud:";
+const cloudCode = (c) => CLOUD_CODE + btoa(JSON.stringify(c));
+function readCloudCode(s) { s = String(s || "").trim(); const i = s.indexOf(CLOUD_CODE); if (i < 0) return null; try { return cloudNormalize(JSON.parse(atob(s.slice(i + CLOUD_CODE.length).split(/\s/)[0]))); } catch { return null; } }
+function corsCommand(c) {
+  const origin = location.protocol === "https:" ? location.origin : "https://ernstemileggummyrvang-sketch.github.io";
+  const xml = `<CORSConfiguration><CORSRule><AllowedOrigin>${origin}</AllowedOrigin><AllowedMethod>GET</AllowedMethod><AllowedMethod>HEAD</AllowedMethod><AllowedMethod>PUT</AllowedMethod><AllowedMethod>DELETE</AllowedMethod><AllowedHeader>*</AllowedHeader><ExposeHeader>ETag</ExposeHeader><MaxAgeSeconds>3600</MaxAgeSeconds></CORSRule></CORSConfiguration>`;
+  const q = (s) => `'${String(s).replace(/'/g, `'\\''`)}'`;
+  return `X=${q(xml)}; curl -sS --fail-with-body --aws-sigv4 ${q(`aws:amz:${c.region}:s3`)} --user ${q(`${c.keyId}:${c.key}`)} -X PUT -H "Content-MD5: $(printf %s "$X" | openssl md5 -binary | base64)" -H 'Content-Type: application/xml' --data-binary "$X" ${q(`${new URL(c.endpoint).origin}/${c.bucket}?cors`)} && echo && echo 'Done. Earnies can now sync with this bucket.'`;
+}
+function cloudForm() { return cloudNormalize({ endpoint: $("#cl-endpoint").value, bucket: $("#cl-bucket").value, keyId: $("#cl-keyid").value, key: $("#cl-key").value }); }
+function openCloudSetup() {
+  const c = cloud.cfg || {};
+  openModal(`${modalHead("Cloud sync", "Connect Backblaze")}
+    <ol class="steps cloud-steps">
+      <li><span>Make a free account at <b>backblaze.com</b> (B2 Cloud Storage). Pick the <b>EU Central</b> region if it asks.</span></li>
+      <li><span>Go to <b>Buckets › Create a Bucket</b>. Give it any unique name, keep it <b>Private</b>. Copy its <b>Endpoint</b> (looks like s3.eu-central-003.backblazeb2.com).</span></li>
+      <li><span>Go to <b>Application Keys › Add a New Application Key</b>. Allow access to <b>All</b> buckets, type <b>Read and Write</b>. Copy the <b>keyID</b> and <b>applicationKey</b> straight away, they're only shown once.</span></li>
+      <li><span>Fill in the four boxes below, tap <b>Copy setup command</b>, paste it into the Mac's <b>Terminal</b> app and press Return. You only do this once.</span></li>
+      <li><span>Tap <b>Connect</b>. Then copy the <b>code for your iPhone</b> and paste it there.</span></li>
+    </ol>
+    <form class="cloud-form" data-form="cloud" onsubmit="return false">
+      <label>Paste a code from your other device<input class="field mono" id="cl-code" placeholder="earnies-cloud:…" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <div class="cloud-or"><span>or fill in</span></div>
+      <label>Endpoint<input class="field mono" id="cl-endpoint" value="${esc(c.endpoint ? new URL(c.endpoint).host : "")}" placeholder="s3.eu-central-003.backblazeb2.com" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <label>Bucket name<input class="field mono" id="cl-bucket" value="${esc(c.bucket || "")}" placeholder="earnies-beats" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <div class="row2">
+        <label>keyID<input class="field mono" id="cl-keyid" value="${esc(c.keyId || "")}" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+        <label>applicationKey<input class="field mono" id="cl-key" type="password" value="${esc(c.key || "")}" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      </div>
+      <p class="err" id="cl-err" role="alert"></p>
+      <div class="xfer-go cloud-go">
+        <button type="button" class="btn sm" data-act="cloud-cmd">Copy setup command</button>
+        <button type="button" class="btn primary" data-act="cloud-connect">Connect</button>
+      </div>
+    </form>
+    <p class="xfer-how">Your key stays on your own devices. If Terminal says <b>AccessDenied</b>, run the command again with your <b>Master Application Key</b> in the keyID and applicationKey boxes, then put the normal key back before tapping Connect.</p>`, true);
+}
+async function copyText(t) { try { await navigator.clipboard.writeText(t); return true; } catch { return false; } }
+async function cloudConnect(btn) {
+  const err = $("#cl-err"); err.textContent = "";
+  const c = readCloudCode($("#cl-code").value) || cloudForm();
+  if (!c.endpoint || !c.bucket || !c.keyId || !c.key) { err.textContent = "Fill in all four boxes, or paste a code from your other device."; return; }
+  btn.disabled = true; btn.textContent = "Checking…";
+  const prev = cloud.cfg; cloud.cfg = c;
+  try {
+    await s3("PUT", "earnies/.check", new Blob([String(Date.now())]));
+    await s3("GET", "earnies/.check");
+  } catch (e) {
+    cloud.cfg = prev; btn.disabled = false; btn.textContent = "Connect";
+    err.textContent = e.status === 0 ? "Couldn't reach the bucket. Run the setup command in Terminal on the Mac first, then try again." : e.message; return;
+  }
+  cloudSaveCfg(c); snapAll();
+  try { await navigator.storage?.persist?.(); } catch { /* fine */ }
+  openModal(`${modalHead("Cloud sync", "Connected")}
+    <p class="xfer-lead">This device now syncs with your Backblaze bucket. Beats you add, change or delete show up on your other devices the next time they open Earnies.</p>
+    <div class="xfer-card" style="--t1:var(--water);margin-top:16px">
+      <div class="xfer-ic">${ic("link")}</div>
+      <div class="grow"><b>Code for your iPhone</b><p>Copy it, paste it into Notes or AirDrop it, then on the iPhone tap <b>Sync › Set up</b> and paste it in the top box. Keep it private: it opens your bucket.</p></div>
+      <button class="btn sm" data-act="cloud-copycode">Copy code</button>
+    </div>
+    <p class="xfer-status mono" id="cloud-status">${esc(cloudLine())}</p>
+    <div class="xfer-go"><button class="btn primary" data-act="close">Done</button></div>`);
+  cloudSync();
+}
+function cloudDisconnect() { cloudSaveCfg(null); cloudStatus("off"); toast("Cloud sync is off on this device. Your beats stay here."); openTransfer(); }
+snapAll();
+
 /* ------------------------------------------------------- install (PWA) */
 /* Only the hosted app build carries a manifest; inside the preview the
    install button stays hidden. */
@@ -2510,6 +2771,6 @@ const h = location.hash.slice(1); if (SECTIONS[h]) S.tab = h;
 if (!S.collab && S.collabs[0] && !matchMedia("(max-width:860px)").matches) S.collab = S.collabs[0].id;
 renderAll();
 if (!SECTIONS[h]) showStart();
-openIdb().then((db) => { idb = db; loadArt(); });
+openIdb().then((db) => { idb = db; loadArt(); cloudStatus(cloud.state); if (cloudOn()) cloudSync(); });
 })();
 </script>
